@@ -10,6 +10,18 @@
 
 ---
 
+## 🖼️ Enterprise Dashboard UI Showcase
+
+| 🌐 Main Portal Entrance | ⚙️ Environment Setup & Config |
+| :---: | :---: |
+| ![Main Portal](assets/screenshots/portal_home.png) | ![Environment Setup](assets/screenshots/step2_environment.png) |
+
+| 🔄 Closed-Loop Architecture Diagram | 🎨 Real-Time Visualization & Candidate Code |
+| :---: | :---: |
+| ![Closed-Loop Diagram](assets/screenshots/step3_closed_loop_diagram.png) | ![Visualization Results](assets/screenshots/step5_visualization_results.png) |
+
+---
+
 ## 📌 Executive Overview
 
 **AlphaEvolve Autonomous Engine**은 Google Cloud Discovery Engine 및 Gemini 3.5 Pro/Flash LLM을 결합하여, 인간 엔지니어가 수동으로 작성한 코드를 **무한 폐루프(Closed-Loop) 자율 피트니스 평가기(Sandbox Evaluator)**와 연동해 수학 알고리즘 및 반도체 RTL 회로를 자동 변이·최적화하는 엔터프라이즈 AI 프레임워크입니다.
