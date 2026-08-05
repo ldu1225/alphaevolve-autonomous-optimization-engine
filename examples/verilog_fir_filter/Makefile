@@ -6,4 +6,4 @@ help:
 
 run:
 	rm -rf src/candidates/*
-	PYTHONPATH=../..:../../src:.:src python3 src/run_evolution.py
+	PYTHONPATH=../..:../../src:.:src ../../.venv/bin/python src/run_evolution.py

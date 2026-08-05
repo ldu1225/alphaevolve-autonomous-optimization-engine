@@ -24,7 +24,8 @@ from typing import Any, Mapping
 from dotenv import load_dotenv
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-EXAMPLES_DIR = os.path.dirname(CURRENT_DIR)
+VERILOG_DIR = os.path.dirname(CURRENT_DIR)
+EXAMPLES_DIR = os.path.dirname(VERILOG_DIR)
 PROJECT_ROOT = os.path.dirname(EXAMPLES_DIR)
 
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "src"))
@@ -32,6 +33,7 @@ sys.path.insert(0, CURRENT_DIR)
 sys.path.insert(0, PROJECT_ROOT)
 
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
+load_dotenv(os.path.join(VERILOG_DIR, ".env"))
 
 # Official AlphaEvolve Framework Imports
 from alpha_evolve.client import AlphaEvolveClient
@@ -64,26 +66,45 @@ WEB_DEMO_DIR = os.path.join(PROJECT_ROOT, "web_demo")
 LIVE_DATA_JSON = os.path.join(WEB_DEMO_DIR, "live_verilog_data.json")
 
 # Load Problem Instructions from instructions.md
-INSTRUCTIONS_FILE = os.path.join(EXAMPLES_DIR, "instructions.md")
+INSTRUCTIONS_FILE = os.path.join(VERILOG_DIR, "instructions.md")
 PROBLEM_DESC = ""
 if os.path.exists(INSTRUCTIONS_FILE):
     with open(INSTRUCTIONS_FILE, "r", encoding="utf-8") as f:
         PROBLEM_DESC = f.read()
 
-# Load Initial Seed Program dynamically from src/program.py
-PROGRAM_PY_FILE = os.path.join(CURRENT_DIR, "program.py")
-if os.path.exists(PROGRAM_PY_FILE):
-    with open(PROGRAM_PY_FILE, "r", encoding="utf-8") as f:
+# Load Initial Seed Program dynamically from src/program.v (Pure Verilog RTL)
+PROGRAM_V_FILE = os.path.join(CURRENT_DIR, "program.v")
+if os.path.exists(PROGRAM_V_FILE):
+    with open(PROGRAM_V_FILE, "r", encoding="utf-8") as f:
         INITIAL_PROGRAM_CODE = f.read()
 else:
-    INITIAL_PROGRAM_CODE = """def compute_fir_response(x_signal):
-    n = len(x_signal)
-    y_signal = np.zeros(n, dtype=int)
-    # EVOLVE-BLOCK-START
-    for i in range(7, n):
-        y_signal[i] = (x_signal[i] * 1) + (x_signal[i-1] * 2) + (x_signal[i-2] * 4) + (x_signal[i-3] * 8) + (x_signal[i-4] * 8) + (x_signal[i-5] * 4) + (x_signal[i-6] * 2) + (x_signal[i-7] * 1)
-    # EVOLVE-BLOCK-END
-    return y_signal"""
+    INITIAL_PROGRAM_CODE = """// Enterprise Semiconductor OLED DDI 8-Tap Symmetric FIR Filter Core - Synthesizable Verilog RTL
+module oled_ddi_fir_filter (
+    input  wire        clk,
+    input  wire        rst_n,
+    input  wire [15:0] x_in,
+    output reg  [15:0] y_out
+);
+    reg [15:0] x_pipe [0:7];
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            x_pipe[0] <= 16'd0; x_pipe[1] <= 16'd0; x_pipe[2] <= 16'd0; x_pipe[3] <= 16'd0;
+            x_pipe[4] <= 16'd0; x_pipe[5] <= 16'd0; x_pipe[6] <= 16'd0; x_pipe[7] <= 16'd0;
+            y_out <= 16'd0;
+        end else begin
+            x_pipe[0] <= x_in;      x_pipe[1] <= x_pipe[0]; x_pipe[2] <= x_pipe[1]; x_pipe[3] <= x_pipe[2];
+            x_pipe[4] <= x_pipe[3]; x_pipe[5] <= x_pipe[4]; x_pipe[6] <= x_pipe[5]; x_pipe[7] <= x_pipe[6];
+
+            // EVOLVE-BLOCK-START
+            // AS-IS Baseline: 8 Expensive Hardware Multipliers (Coefficients: 1, 2, 4, 8, 8, 4, 2, 1)
+            y_out <= (x_pipe[0] * 16'd1) + (x_pipe[1] * 16'd2) + (x_pipe[2] * 16'd4) + (x_pipe[3] * 16'd8) +
+                     (x_pipe[4] * 16'd8) + (x_pipe[5] * 16'd4) + (x_pipe[6] * 16'd2) + (x_pipe[7] * 16'd1);
+            // EVOLVE-BLOCK-END
+        end
+    end
+
+endmodule"""
 
 EVALUATION_COUNTER = 0
 LIVE_CANDIDATES_HISTORY = []
@@ -102,7 +123,6 @@ def sync_live_json():
     except Exception as e:
         logging.error(f"Live JSON sync error: {e}")
 
-# Evaluator Function Registered with AlphaEvolve SDK
 def verilog_fir_evaluation(candidate_data: Mapping[str, Any]) -> Mapping[str, Any]:
     global EVALUATION_COUNTER
     files = candidate_data.get("content", {}).get("files", [])
@@ -110,29 +130,25 @@ def verilog_fir_evaluation(candidate_data: Mapping[str, Any]) -> Mapping[str, An
         return {"scores": {"scores": [{"score": 0.0}]}}
 
     code_content = files[0].get("content", "")
-    
-    import types
-    mod = types.ModuleType("cand_module")
-    mod.__source__ = code_content
-    mod.__dict__['np'] = __import__('numpy')
-    try:
-        exec(code_content, mod.__dict__)
-        score = evaluate(mod)
-    except Exception as e:
-        logging.error(f"AlphaEvolve Evaluator Exception: {e}")
-        score = 0.0
+    score = evaluate(code_content)
 
-    # Real-time Candidate File Saving to Disk
+    # Real-time Candidate File Saving to Disk (.v)
+    cand_index = EVALUATION_COUNTER
     EVALUATION_COUNTER += 1
     candidates_dir = os.path.join(CURRENT_DIR, "candidates")
     os.makedirs(candidates_dir, exist_ok=True)
-    cand_path = os.path.join(candidates_dir, f"candidate_{EVALUATION_COUNTER}.py")
+    cand_path = os.path.join(candidates_dir, f"candidate_{cand_index}.v")
     try:
         with open(cand_path, "w", encoding="utf-8") as f:
             f.write(code_content)
-        logging.info(f"💾 Saved real-time candidate file: {cand_path} (Score: {score:.4f})")
+        logging.info(f"💾 Saved real-time candidate Verilog file: {cand_path} (Score: {score:.4f})")
     except Exception as err:
         logging.error(f"Failed to write candidate file {cand_path}: {err}")
+
+    mult_c = code_content.count('*')
+    shift_c = code_content.count('<<')
+    has_sym = "x_pipe[0] + x_pipe[7]" in code_content or "s0" in code_content
+    has_tree = "stage1" in code_content or "sum_" in code_content
 
     topo_desc = "8-Tap 수동 곱셈기 회로" if mult_c > 0 else ("Balanced Tree 구조" if has_tree else ("대칭 사전가산기 구조" if has_sym else "무곱셈기 시프트 회로"))
     annotated_code = code_content
@@ -222,7 +238,7 @@ def main():
             "for Enterprise Semiconductor 8-Tap OLED DDI FIR Filter. "
             "Maximize the ppa_fitness_score while preserving 100% pixel noise filtering accuracy."
         ),
-        "program_language": "python",
+        "program_language": "verilog",
         "run_settings": {
             "max_programs": MAX_PROGRAMS_GENERATED,
             "concurrency": CONCURRENCY,
@@ -247,7 +263,7 @@ def main():
         "content": {
             "files": [
                 {
-                    "path": "program.py",
+                    "path": "program.v",
                     "content": INITIAL_PROGRAM_CODE,
                 }
             ]

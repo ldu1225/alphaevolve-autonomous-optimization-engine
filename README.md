@@ -111,14 +111,13 @@ alphaevolve-autonomous-optimization-engine/
 │   │       ├── program.py        #    - Seed Code containing // EVOLVE-BLOCK
 │   │       ├── evaluate.py       #    - Overlap & Sum of Radii Sandbox Evaluator
 │   │       └── run_evolution.py  #    - AlphaEvolve Controller Orchestrator
-│   └── verilog_fir_filter/       # ⚡ Semiconductor FIR Filter PPA Scenario
-│       ├── instructions.md       #    - Hardware PPA Optimization Instructions
-│       ├── Makefile              #    - Automation Execution Macros
+│   └── verilog_fir_filter/       # ⚡ Pure Verilog RTL Semiconductor FIR Filter PPA Scenario
+│       ├── instructions.md       #    - Pure Verilog Hardware PPA Optimization Instructions
+│       ├── Makefile              #    - Automation Execution Macros (make run)
 │       └── src/
-│         ├── program.v         #    - Synthesizable Original Verilog RTL Core
-│         ├── program.py        #    - Python Simulation Bridge Seed Code
-│         ├── evaluate.py       #    - MSE Noise Accuracy & Gate Area Evaluator
-│         └── run_evolution.py  #    - Real-time SDK Session Controller
+│         ├── program.v         #    - Pure Synthesizable Original Verilog RTL Core
+│         ├── evaluate.py       #    - Micro-Granularity Verilog Gate Area Evaluator
+│         └── run_evolution.py  #    - Pure Verilog RTL Real-time SDK Session Controller
 ├── web_demo/                     # 🖥️ High-Contrast Visual Web Dashboard UI
 │   ├── index.html                #    - Main Portal & Closed-Loop Visualizer
 │   ├── app.js                    #    - Dynamic Switching & Real-time Canvas Renderer
