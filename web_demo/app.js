@@ -1069,9 +1069,10 @@ async function runTermCommand(cmdText) {
   const cleanCmd = cmdText.trim();
   if (!cleanCmd) return;
 
+  const currentDirName = currentScenario === 'verilog_fir' ? 'verilog_fir_filter' : 'circle_packing';
   const promptLine = document.createElement('div');
   promptLine.className = 'term-line';
-  promptLine.innerHTML = `<span class="prompt">dulee@macbook:~/Alphaevolve/examples/circle_packing$</span> <span class="cmd">${cleanCmd}</span>`;
+  promptLine.innerHTML = `<span class="prompt">dulee@macbook:~/Alphaevolve/examples/${currentDirName}$</span> <span class="cmd">${cleanCmd}</span>`;
 
   const outputLine = document.createElement('div');
   outputLine.className = 'term-output';
@@ -1089,7 +1090,7 @@ async function runTermCommand(cmdText) {
     const res = await fetch('/api/terminal', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ command: cleanCmd })
+      body: JSON.stringify({ command: cleanCmd, scenario: currentScenario })
     });
     
     if (res.ok) {
@@ -1112,7 +1113,7 @@ async function runTermCommand(cmdText) {
   const newPromptLine = document.createElement('div');
   newPromptLine.className = 'term-line prompt-line';
   newPromptLine.style.cssText = 'display: flex; align-items: center; gap: 8px;';
-  newPromptLine.innerHTML = `<span class="prompt">dulee@macbook:~/Alphaevolve/examples/circle_packing$</span> <input type="text" id="term-input" placeholder="명령어를 타이핑하고 Enter를 누르세요 (예: ae version, ae experiment list, ls -la...)" style="flex: 1; background: transparent; border: none; outline: none; color: #00d2ff; font-family: monospace; font-size: 13px;" onkeydown="handleTermKey(event)" />`;
+  newPromptLine.innerHTML = `<span class="prompt">dulee@macbook:~/Alphaevolve/examples/${currentDirName}$</span> <input type="text" id="term-input" placeholder="명령어를 타이핑하고 Enter를 누르세요 (예: ae version, ae experiment list, ls -la...)" style="flex: 1; background: transparent; border: none; outline: none; color: #00d2ff; font-family: monospace; font-size: 13px;" onkeydown="handleTermKey(event)" />`;
   termBody.appendChild(newPromptLine);
 
   const newInput = document.getElementById('term-input');

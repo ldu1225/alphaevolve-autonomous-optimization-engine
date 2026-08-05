@@ -79,12 +79,15 @@ class AlphaEvolveServerHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 data = json.loads(post_data.decode('utf-8'))
                 cmd = data.get('command', '').strip()
+                scenario = data.get('scenario', 'verilog_fir')
                 
+                target_sub_dir = "examples/verilog_fir_filter" if scenario == "verilog_fir" else "examples/circle_packing"
+
                 if not cmd:
                     response_data = {"output": "Error: Empty command"}
                 else:
-                    # Execute REAL shell command in examples/circle_packing directory with venv
-                    shell_cmd = f"source .venv/bin/activate 2>/dev/null || true; cd examples/circle_packing 2>/dev/null || true; {cmd}"
+                    # Execute REAL shell command in dynamic scenario directory with venv
+                    shell_cmd = f"source .venv/bin/activate 2>/dev/null || true; cd {target_sub_dir} 2>/dev/null || true; {cmd}"
                     
                     process = subprocess.run(
                         shell_cmd,
