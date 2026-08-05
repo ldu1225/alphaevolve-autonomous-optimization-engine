@@ -150,6 +150,8 @@ function renderScenarioText(scenarioId) {
     if (circleStep1) circleStep1.style.display = 'block';
     if (verilogStep1) verilogStep1.style.display = 'none';
 
+    const circleCanvasCard = document.getElementById('step5-canvas-card');
+    const verilogCanvasCard = document.getElementById('step5-verilog-card');
     if (circleCanvasCard) circleCanvasCard.style.display = 'block';
     if (verilogCanvasCard) verilogCanvasCard.style.display = 'none';
 
