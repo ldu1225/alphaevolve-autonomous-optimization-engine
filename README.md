@@ -174,45 +174,72 @@ python server.py
 
 ---
 
-### 5. 🛠️ Official `ae` CLI Usage Guide (`ae` 명령어 사용법)
+### 5. 🛠️ Official `ae` CLI Detailed Guide & Command Reference (`ae` 명령어 상세 가이드)
 
-Google Official `ae` CLI 도구를 활용하여 실험 생성, 코드 전송, 로컬 평가 루프를 3단계 라이프사이클로 수행할 수 있습니다:
+Google Official `ae` CLI 도구는 구글 클라우드 알파이볼브 백엔드 세션과 로컬 컴퓨팅 환경을 연결하여 실험 등록, 코드 업로드, 폐루프 채점 및 세대별 변형 내역 관리를 수행하는 통합 Command Line Interface입니다.
 
-#### ① CLI 환경 설정 & GCP 인증
-```bash
-# 가상환경 활성화
-source .venv/bin/activate
+---
 
-# GCP ADC 인증 및 Quota 설정
-gcloud auth application-default login
-gcloud auth application-default set-quota-project <YOUR_PROJECT_ID>
+#### 📐 `ae` CLI 내부 작동 원리 (Architecture & Flow)
+
+```
+┌─────────────────┐       ① ae experiment create (실험 등록)       ┌─────────────────┐
+│                 │ ──────────────────────────────────────────────▶ │                 │
+│   구글 클라우드   │       ② ae experiment start  (시드 업로드)     │   사용자 터미널  │
+│ 백엔드 엔진 세션 │ ──────────────────────────────────────────────▶ │   (`ae` CLI)    │
+│  (Gemini 3.5)   │       ③ ae experiment run    (로컬 폐루프)     │                 │
+│                 │ ◀────────────────────────────────────────────── │                 │
+└─────────────────┘                                                 └─────────────────┘
+                                                                             │
+                                                                             ▼
+                                                                  [로컬 evaluator.py 채점]
 ```
 
-#### ② 실험 라이프사이클 3단계 실행 (Circle Packing 예시)
+1. **`create`**: 구글 클라우드 Discovery Engine 백엔드 세션에 실험 목표(`instructions.md`)와 생성 모델(`gemini-3.5-flash`)을 등록하고 **실험 고유 닉네임(예: `exp-merciful-avocet`)**을 발급받습니다.
+2. **`start`**: 인간이 작성한 초기 시드 프로그램(`initial_program.py`)과 베이스라인 피트니스 점수(`0.9415`)를 업로드하여 실험 상태를 `RUNNING`으로 전환합니다.
+3. **`run`**: 클라우드 Gemini AI가 만들어낸 변형 코드를 가져와(Acquire) 로컬 `evaluator.py`로 채점(Evaluate)한 뒤 점수를 백엔드에 리포트(Submit)하는 무한 진화 루프를 구동합니다.
+
+---
+
+#### 🚀 3단계 라이프사이클 명령어 (Circle Packing 예시)
+
 ```bash
+# 디렉토리 이동
 cd examples/circle_packing
 
-# Step 1: 실험 등록 (Create) -> 닉네임(예: exp-merciful-avocet) 생성
-ae experiment create --max-programs 100 --problem-file instructions.md --title "Circle Packing Optimization" --models gemini-3.5-flash
+# Step 1: 실험 등록 (Create) -> 백엔드 세션 등록 후 고유 닉네임 반환
+ae experiment create \
+  --max-programs 100 \
+  --problem-file instructions.md \
+  --title "Circle Packing Optimization" \
+  --models gemini-3.5-flash
 
-# Step 2: 초기 코드 및 베이스라인 점수 업로드 (Start)
+# Step 2: 시드 프로그램 및 베이스라인 점수 시작 (Start)
 ae experiment start exp-merciful-avocet --program-dir exp_src --score 0.9415
 
-# Step 3: 로컬 평가 루프 및 대시보드 구동 (Run)
+# Step 3: 로컬 평가 폐루프 및 실시간 대시보드 구동 (Run)
 ae experiment run exp-merciful-avocet --evaluator evaluator.py --dashboard circle_packing_dashboard.md
 ```
 
-#### ③ 세대별 코드 및 변형점(Diff) 조회
-```bash
-# 생성된 세대별 후보 목록 조회
-ae program list exp-merciful-avocet
+---
 
-# 특정 후보(세대) 전체 소스코드 확인
-ae program show prog-fanatic-stallion --experiment exp-merciful-avocet
+#### 🔍 세대별 변형 소스코드 & Diff 내역 조회 커맨드
 
-# 이전 부모 세대 대비 변형된 코드 차이점(diff) 확인
-ae program diff prog-fanatic-stallion --experiment exp-merciful-avocet
-```
+| 조회 목적 | CLI 명령 예시 | 설명 |
+| :--- | :--- | :--- |
+| **전체 세대 목록** | `ae program list exp-merciful-avocet` | 해당 실험에서 생성된 모든 세대/후보의 닉네임과 점수 목록을 출력합니다. |
+| **특정 세대 소스코드** | `ae program show prog-fanatic-stallion --experiment exp-merciful-avocet` | 지정한 세대 후보(예: 1위 코드)의 **전체 파이썬/Verilog 소스코드**를 바로 조회합니다. |
+| **코드 변형점 (Diff)** | `ae program diff prog-fanatic-stallion --experiment exp-merciful-avocet` | 이전 부모 세대 대비 AI가 **어느 라인의 코드를 변형/개선했는지 (Diff)** 한눈에 보여줍니다. |
+| **실험 상세 상태** | `ae experiment describe exp-merciful-avocet` | 현재 실험의 상태(`RUNNING`), 총 생성 개체 수, 모델 설정을 확인합니다. |
+| **단일 코드 로컬 검증** | `ae program evaluate --program-dir exp_src --evaluator evaluator.py` | 실험 등록 전 작성된 파이썬/Verilog 코드가 정상 채점되는지 미리 테스트합니다. |
+
+---
+
+#### 📋 CLI 프로필 및 구성 커맨드 (`ae config`)
+
+* `ae config show`: 현재 적용된 Project ID, Engine, Session, Model 설정을 출력합니다.
+* `ae config discover`: 현재 로그인된 `gcloud` 계정의 GCP 프로젝트 정보를 자동 감지합니다.
+* `ae config test`: 구글 클라우드 Discovery Engine API 접속 및 IAM 권한을 검증합니다.
 
 ---
 
