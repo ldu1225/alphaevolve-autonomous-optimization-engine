@@ -332,10 +332,10 @@ const verilogFileRegistry = {
   '.env': {
     title: '📄 파일 원본 내용 뷰어: examples/verilog_fir_filter/.env',
     badge: 'Verilog RTL 환경 설정 파일',
-    content: `PROJECT_ID=484712896449
+    content: `PROJECT_ID=your-gcp-project-id
 LOCATION=global
 COLLECTION=default_collection
-GE_APP_ID=agentspace-poc_1742454692348
+GE_APP_ID=your-ge-app-id
 ASSISTANT=default_assistant
 BASE_URL=discoveryengine.googleapis.com
 PROGRAMMING_LANGUAGE=verilog
@@ -469,10 +469,10 @@ const fileRegistry = {
   '.env': {
     title: '📄 파일 원본 내용 뷰어: .env',
     badge: 'GCP 환경설정 파일',
-    content: `PROJECT_ID=484712896449
+    content: `PROJECT_ID=your-gcp-project-id
 LOCATION=global
 COLLECTION=default_collection
-GE_APP_ID=agentspace-poc_1742454692348
+GE_APP_ID=your-ge-app-id
 ASSISTANT=default_assistant
 BASE_URL=discoveryengine.googleapis.com
 MODEL_1=gemini-3.5-flash

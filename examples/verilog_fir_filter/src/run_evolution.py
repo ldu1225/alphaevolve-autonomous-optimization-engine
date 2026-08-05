@@ -44,10 +44,10 @@ except ImportError:
     from src.evaluate import evaluate
 
 # Configuration
-PROJECT_ID = os.getenv("PROJECT_ID", "484712896449")
+PROJECT_ID = os.getenv("PROJECT_ID", "your-gcp-project-id")
 LOCATION = os.getenv("LOCATION", "global")
 COLLECTION = os.getenv("COLLECTION", "default_collection")
-GE_APP_ID = os.getenv("GE_APP_ID", "agentspace-poc_1742454692348")
+GE_APP_ID = os.getenv("GE_APP_ID", "your-ge-app-id")
 ASSISTANT = os.getenv("ASSISTANT", "default_assistant")
 BASE_URL = os.getenv("BASE_URL", "discoveryengine.googleapis.com")
 

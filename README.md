@@ -141,7 +141,7 @@ cp example.env .env
 PROJECT_ID=your-gcp-project-id
 LOCATION=global
 COLLECTION=default_collection
-GE_APP_ID=agentspace-poc_1742454692348
+GE_APP_ID=your-ge-app-id
 ASSISTANT=default_assistant
 MODEL_1=gemini-3.5-flash
 ```
