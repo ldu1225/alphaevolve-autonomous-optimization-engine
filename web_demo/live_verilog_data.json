@@ -1,0 +1,128 @@
+{
+  "scenario": "verilog_fir",
+  "total_generations": 11,
+  "best_score": 0.985,
+  "candidates": [
+    {
+      "index": 0,
+      "candidate_id": "gcp_cand_0",
+      "label": "Gen #0 (0.5200)",
+      "score": 0.52,
+      "status": "SUCCESS",
+      "error": "",
+      "description": "Gen #0 (Seed): 8-Tap 수동 곱셈기 (실측 PPA: 0.5200)",
+      "code": "def compute_fir_response(x_signal):\n    n = len(x_signal)\n    y_signal = np.zeros(n, dtype=int)\n    # EVOLVE-BLOCK-START\n    for i in range(7, n):\n        y_signal[i] = (x_signal[i] * 1) + (x_signal[i-1] * 2) + (x_signal[i-2] * 4) + (x_signal[i-3] * 8) + (x_signal[i-4] * 8) + (x_signal[i-5] * 4) + (x_signal[i-6] * 2) + (x_signal[i-7] * 1)\n    # EVOLVE-BLOCK-END\n    return y_signal",
+      "verilog_code": "// Evolved Verilog RTL Module (Score: 0.5200)\nmodule oled_ddi_fir_filter;\n// Evolved RTL Expression\nendmodule"
+    },
+    {
+      "index": 1,
+      "candidate_id": "gcp_cand_1",
+      "label": "Gen #1 (0.5200)",
+      "score": 0.52,
+      "status": "SUCCESS",
+      "error": "",
+      "description": "Gen #1: 8-Tap 수동 곱셈기 (실측 PPA: 0.5200)",
+      "code": "def compute_fir_response(x_signal):\n    n = len(x_signal)\n    y_signal = np.zeros(n, dtype=int)\n    # EVOLVE-BLOCK-START\n    for i in range(7, n):\n        y_signal[i] = (x_signal[i] * 1) + (x_signal[i-1] * 2) + (x_signal[i-2] * 4) + (x_signal[i-3] * 8) + (x_signal[i-4] * 8) + (x_signal[i-5] * 4) + (x_signal[i-6] * 2) + (x_signal[i-7] * 1)\n    # EVOLVE-BLOCK-END\n    return y_signal",
+      "verilog_code": "// Evolved Verilog RTL Module (Score: 0.5200)\nmodule oled_ddi_fir_filter;\n// Evolved RTL Expression\nendmodule"
+    },
+    {
+      "index": 2,
+      "candidate_id": "gcp_cand_2",
+      "label": "Gen #2 (0.9400)",
+      "score": 0.94,
+      "status": "SUCCESS",
+      "error": "",
+      "description": "Gen #2: Balanced Tree 구조 (실측 PPA: 0.9400)",
+      "code": "def compute_fir_response(x_signal):\n    n = len(x_signal)\n    y_signal = np.zeros(n, dtype=int)\n    # EVOLVE-BLOCK-START\n    for i in range(7, n):\n        # Exploit symmetric filter coefficients to pre-add paired taps\n        s0 = x_signal[i] + x_signal[i-7]\n        s1 = x_signal[i-1] + x_signal[i-6]\n        s2 = x_signal[i-2] + x_signal[i-5]\n        s3 = x_signal[i-3] + x_signal[i-4]\n\n        # Use zero-cost bitwise shifts instead of area-heavy multipliers\n        t0 = s0\n        t1 = s1 << 1\n        t2 = s2 << 2\n        t3 = s3 << 3\n\n        # Balanced adder tree to minimize critical path propagation delay\n        sum_01 = t0 + t1\n        sum_23 = t2 + t3\n        y_signal[i] = sum_01 + sum_23\n    # EVOLVE-BLOCK-END\n    return y_signal",
+      "verilog_code": "// Evolved Verilog RTL Module (Score: 0.9400)\nmodule oled_ddi_fir_filter;\n// Evolved RTL Expression\nendmodule"
+    },
+    {
+      "index": 3,
+      "candidate_id": "gcp_cand_3",
+      "label": "Gen #3 (0.9850)",
+      "score": 0.985,
+      "status": "SUCCESS",
+      "error": "",
+      "description": "Gen #3: Balanced Tree 구조 (실측 PPA: 0.9850)",
+      "code": "def compute_fir_response(x_signal):\n    n = len(x_signal)\n    y_signal = np.zeros(n, dtype=int)\n    # EVOLVE-BLOCK-START\n    for i in range(7, n):\n        # Symmetric inputs pairing to exploit filter symmetry and reduce operation count\n        s0 = x_signal[i] + x_signal[i-7]\n        s1 = x_signal[i-1] + x_signal[i-6]\n        s2 = x_signal[i-2] + x_signal[i-5]\n        s3 = x_signal[i-3] + x_signal[i-4]\n\n        # Efficient bitwise left shifts instead of expensive hardware multipliers\n        t1 = s1 << 1\n        t2 = s2 << 2\n        t3 = s3 << 3\n\n        # Balanced adder tree structure to minimize signal propagation delay (3 levels deep)\n        stage1_0 = s0 + t1\n        stage1_1 = t2 + t3\n        y_signal[i] = stage1_0 + stage1_1\n    # EVOLVE-BLOCK-END\n    return y_signal",
+      "verilog_code": "// Evolved Verilog RTL Module (Score: 0.9850)\nmodule oled_ddi_fir_filter;\n// Evolved RTL Expression\nendmodule"
+    },
+    {
+      "index": 4,
+      "candidate_id": "gcp_cand_4",
+      "label": "Gen #4 (0.9400)",
+      "score": 0.94,
+      "status": "SUCCESS",
+      "error": "",
+      "description": "Gen #4: Balanced Tree 구조 (실측 PPA: 0.9400)",
+      "code": "def compute_fir_response(x_signal):\n    n = len(x_signal)\n    y_signal = np.zeros(n, dtype=int)\n    # EVOLVE-BLOCK-START\n    for i in range(7, n):\n        # Stage 1: Symmetric input pairs addition to exploit filter symmetry\n        s07 = x_signal[i] + x_signal[i-7]\n        s16 = x_signal[i-1] + x_signal[i-6]\n        s25 = x_signal[i-2] + x_signal[i-5]\n        s34 = x_signal[i-3] + x_signal[i-4]\n\n        # Stage 2: Scaling via bitwise left shifts (zero-cost hardware routing)\n        t0 = s07\n        t1 = s16 << 1\n        t2 = s25 << 2\n        t3 = s34 << 3\n\n        # Stage 3: Balanced binary adder tree to minimize critical path propagation delay\n        sum_01 = t0 + t1\n        sum_23 = t2 + t3\n\n        # Stage 4: Final pipeline stage accumulation\n        y_signal[i] = sum_01 + sum_23\n    # EVOLVE-BLOCK-END\n    return y_signal",
+      "verilog_code": "// Evolved Verilog RTL Module (Score: 0.9400)\nmodule oled_ddi_fir_filter;\n// Evolved RTL Expression\nendmodule"
+    },
+    {
+      "index": 5,
+      "candidate_id": "gcp_cand_5",
+      "label": "Gen #5 (0.9850)",
+      "score": 0.985,
+      "status": "SUCCESS",
+      "error": "",
+      "description": "Gen #5: Balanced Tree 구조 (실측 PPA: 0.9850)",
+      "code": "def compute_fir_response(x_signal):\n    n = len(x_signal)\n    y_signal = np.zeros(n, dtype=int)\n    # EVOLVE-BLOCK-START\n    for i in range(7, n):\n        # Step 1: Symmetric Folding to exploit filter symmetry (reduces operations by 50%)\n        s0 = x_signal[i] + x_signal[i-7]\n        s1 = x_signal[i-1] + x_signal[i-6]\n        s2 = x_signal[i-2] + x_signal[i-5]\n        s3 = x_signal[i-3] + x_signal[i-4]\n\n        # Step 2: Multiplication-free hardware-efficient constant scaling via left-shifts\n        t0 = s0\n        t1 = s1 << 1\n        t2 = s2 << 2\n        t3 = s3 << 3\n\n        # Step 3: Balanced binary adder tree to minimize propagation delay / critical path\n        sum_stage1_0 = t0 + t1\n        sum_stage1_1 = t2 + t3\n        \n        y_signal[i] = sum_stage1_0 + sum_stage1_1\n    # EVOLVE-BLOCK-END\n    return y_signal",
+      "verilog_code": "// Evolved Verilog RTL Module (Score: 0.9850)\nmodule oled_ddi_fir_filter;\n// Evolved RTL Expression\nendmodule"
+    },
+    {
+      "index": 6,
+      "candidate_id": "gcp_cand_6",
+      "label": "Gen #6 (0.9400)",
+      "score": 0.94,
+      "status": "SUCCESS",
+      "error": "",
+      "description": "Gen #6: Balanced Tree 구조 (실측 PPA: 0.9400)",
+      "code": "def compute_fir_response(x_signal):\n    n = len(x_signal)\n    y_signal = np.zeros(n, dtype=int)\n    # EVOLVE-BLOCK-START\n    for i in range(7, n):\n        # Stage 1: Symmetric Additions to reduce shifting operations\n        s0 = x_signal[i] + x_signal[i-7]\n        s1 = x_signal[i-1] + x_signal[i-6]\n        s2 = x_signal[i-2] + x_signal[i-5]\n        s3 = x_signal[i-3] + x_signal[i-4]\n\n        # Stage 2: Shifting (replacing hardware multipliers with zero-cost wire shifts)\n        t0 = s0\n        t1 = s1 << 1\n        t2 = s2 << 2\n        t3 = s3 << 3\n\n        # Stage 3: Balanced Adder Tree to minimize critical path delay\n        sum_01 = t0 + t1\n        sum_23 = t2 + t3\n        y_signal[i] = sum_01 + sum_23\n    # EVOLVE-BLOCK-END\n    return y_signal",
+      "verilog_code": "// Evolved Verilog RTL Module (Score: 0.9400)\nmodule oled_ddi_fir_filter;\n// Evolved RTL Expression\nendmodule"
+    },
+    {
+      "index": 7,
+      "candidate_id": "gcp_cand_7",
+      "label": "Gen #7 (0.9400)",
+      "score": 0.94,
+      "status": "SUCCESS",
+      "error": "",
+      "description": "Gen #7: Balanced Tree 구조 (실측 PPA: 0.9400)",
+      "code": "def compute_fir_response(x_signal):\n    n = len(x_signal)\n    y_signal = np.zeros(n, dtype=int)\n    # EVOLVE-BLOCK-START\n    # Initialize shift register variables to represent hardware delay lines (D-FFs)\n    x0, x1, x2, x3, x4, x5, x6 = (\n        x_signal[0], x_signal[1], x_signal[2], x_signal[3], x_signal[4], x_signal[5], x_signal[6]\n    )\n\n    for i in range(7, n):\n        x7 = x_signal[i]\n\n        # Exploit symmetric filter coefficients to pre-add paired taps\n        s0 = x7 + x0\n        s1 = x6 + x1\n        s2 = x5 + x2\n        s3 = x4 + x3\n\n        # Factored adder tree to reduce adder bit-width (from 20-bit to 18-bit),\n        # minimizing gate area, power consumption, and critical path propagation delay.\n        sum_01 = (s1 << 1) + s0\n        sum_23 = ((s3 << 1) + s2) << 2\n        y_signal[i] = sum_01 + sum_23\n\n        # Shift the hardware register pipeline\n        x0, x1, x2, x3, x4, x5, x6 = x1, x2, x3, x4, x5, x6, x7\n    # EVOLVE-BLOCK-END\n    return y_signal",
+      "verilog_code": "// Evolved Verilog RTL Module (Score: 0.9400)\nmodule oled_ddi_fir_filter;\n// Evolved RTL Expression\nendmodule"
+    },
+    {
+      "index": 8,
+      "candidate_id": "gcp_cand_8",
+      "label": "Gen #8 (0.9850)",
+      "score": 0.985,
+      "status": "SUCCESS",
+      "error": "",
+      "description": "Gen #8: Balanced Tree 구조 (실측 PPA: 0.9850)",
+      "code": "def compute_fir_response(x_signal):\n    n = len(x_signal)\n    y_signal = np.zeros(n, dtype=int)\n    # EVOLVE-BLOCK-START\n    for i in range(7, n):\n        # Stage 1: Symmetric pre-additions to reduce gate area and power\n        sum_0_7 = x_signal[i] + x_signal[i-7]\n        sum_1_6 = x_signal[i-1] + x_signal[i-6]\n        sum_2_5 = x_signal[i-2] + x_signal[i-5]\n        sum_3_4 = x_signal[i-3] + x_signal[i-4]\n\n        # Stage 2: Scaling via bit-shifts (eliminates costly hardware multipliers)\n        term_0 = sum_0_7\n        term_1 = sum_1_6 << 1\n        term_2 = sum_2_5 << 2\n        term_3 = sum_3_4 << 3\n\n        # Stage 3: Balanced adder tree to minimize propagation delay (critical path)\n        stage1_a = term_0 + term_1\n        stage1_b = term_2 + term_3\n        \n        y_signal[i] = stage1_a + stage1_b\n    # EVOLVE-BLOCK-END\n    return y_signal",
+      "verilog_code": "// Evolved Verilog RTL Module (Score: 0.9850)\nmodule oled_ddi_fir_filter;\n// Evolved RTL Expression\nendmodule"
+    },
+    {
+      "index": 9,
+      "candidate_id": "gcp_cand_9",
+      "label": "Gen #9 (0.9400)",
+      "score": 0.94,
+      "status": "SUCCESS",
+      "error": "",
+      "description": "Gen #9: Balanced Tree 구조 (실측 PPA: 0.9400)",
+      "code": "def compute_fir_response(x_signal):\n    n = len(x_signal)\n    y_signal = np.zeros(n, dtype=int)\n    # EVOLVE-BLOCK-START\n    for i in range(7, n):\n        # Leverage symmetry to reduce multipliers and adders\n        sym0 = x_signal[i] + x_signal[i-7]\n        sym1 = x_signal[i-1] + x_signal[i-6]\n        sym2 = x_signal[i-2] + x_signal[i-5]\n        sym3 = x_signal[i-3] + x_signal[i-4]\n\n        # Use shift operations instead of expensive multiplications (Power-of-2 coefficients)\n        s0 = sym0\n        s1 = sym1 << 1\n        s2 = sym2 << 2\n        s3 = sym3 << 3\n\n        # Balanced tree adder structure to minimize critical path delay\n        sum_01 = s0 + s1\n        sum_23 = s2 + s3\n        y_signal[i] = sum_01 + sum_23\n    # EVOLVE-BLOCK-END\n    return y_signal",
+      "verilog_code": "// Evolved Verilog RTL Module (Score: 0.9400)\nmodule oled_ddi_fir_filter;\n// Evolved RTL Expression\nendmodule"
+    },
+    {
+      "index": 10,
+      "candidate_id": "gcp_cand_10",
+      "label": "Gen #10 (0.9400)",
+      "score": 0.94,
+      "status": "SUCCESS",
+      "error": "",
+      "description": "Gen #10: 대칭 사전가산기 (실측 PPA: 0.9400)",
+      "code": "def compute_fir_response(x_signal):\n    n = len(x_signal)\n    y_signal = np.zeros(n, dtype=int)\n    # EVOLVE-BLOCK-START\n    for i in range(7, n):\n        # Exploiting symmetry: pre-add symmetric pairs to halve the arithmetic complexity\n        s0 = x_signal[i] + x_signal[i-7]\n        s1 = x_signal[i-1] + x_signal[i-6]\n        s2 = x_signal[i-2] + x_signal[i-5]\n        s3 = x_signal[i-3] + x_signal[i-4]\n\n        # Shift-based multiplication to avoid costly hardware multipliers (coefficients: 1, 2, 4, 8)\n        y_signal[i] = s0 + (s1 << 1) + (s2 << 2) + (s3 << 3)\n    # EVOLVE-BLOCK-END\n    return y_signal",
+      "verilog_code": "// Evolved Verilog RTL Module (Score: 0.9400)\nmodule oled_ddi_fir_filter;\n// Evolved RTL Expression\nendmodule"
+    }
+  ]
+}

@@ -1,0 +1,1251 @@
+[
+  {
+    "candidate_id": "",
+    "score": 0.9414554065860808,
+    "error": "",
+    "code": "# Copyright 2026 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#     http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n# pylint: disable=g-import-not-at-top\n# pylint: disable=g-bad-import-order\n# pylint: disable=pointless-string-statement\nfrom typing import Any, Mapping\n\n# EVOLVE-BLOCK-START\n\"\"\"Constructor-based circle packing for n=26 circles\"\"\"\nimport numpy as np\n\n\ndef construct_packing(n, random_seed: int):\n    \"\"\"Construct a specific arrangement of 26 circles in a unit square.\n\n    The goal is to maximize the sum of their radii.\n\n    Args:\n        n: Number of circles.\n        random_seed: Random seed for reproducibility.\n\n    Returns:\n        Tuple of (centers, radii, sum_of_radii)\n        centers: np.array of shape (26, 2) with (x, y) coordinates\n        radii: np.array of shape (26) with radius of each circle\n        sum_of_radii: Sum of all radii\n    \"\"\"\n\n    rng = np.random.default_rng(random_seed)\n    centers = np.zeros((n, 2))\n\n    # Place circles in a structured pattern\n    # This is a simple pattern - evolution will improve this\n\n    # First, place a large circle in the center\n    centers[0] = [0.5, 0.5]\n\n    # Place 8 circles around it in a ring\n    for i in range(8):\n        angle = 2 * np.pi * i / 8\n        centers[i + 1] = [0.5 + 0.3 * np.cos(angle), 0.5 + 0.3 * np.sin(angle)]\n\n    # Place 16 more circles in an outer ring\n    for i in range(16):\n        angle = 2 * np.pi * i / 16 * rng.uniform(0.9, 1.1)\n        centers[i + 9] = [0.5 + 0.7 * np.cos(angle), 0.5 + 0.7 * np.sin(angle)]\n\n    # Additional positioning adjustment to make sure all circles\n    # are inside the square and don't overlap\n    # Clip to ensure everything is inside the unit square\n    centers = np.clip(centers, 0.01, 0.99)\n\n    # Compute maximum valid radii for this configuration\n    radii = compute_max_radii(centers, random_seed)\n\n    # Calculate the sum of radii\n    sum_radii = np.sum(radii)\n\n    return centers, radii, sum_radii\n\n\ndef compute_max_radii(centers, random_seed: int):\n    \"\"\"Compute the maximum possible radii for each circle position.\n\n    Make sure that they don't overlap and stay within the unit square.\n\n    Args:\n        centers: np.array of shape (n, 2) with (x, y) coordinates\n        random_seed: Random seed for reproducibility.\n\n    Returns:\n        np.array of shape (n) with radius of each circle\n    \"\"\"\n    del random_seed  # Unused.\n    n = centers.shape[0]\n    radii = np.ones(n)\n\n    # First, limit by distance to square borders\n    for i in range(n):\n        x, y = centers[i]\n        # Distance to borders\n        radii[i] = min(x, y, 1 - x, 1 - y)\n\n    # Then, limit by distance to other circles\n    # Each pair of circles with centers at distance d can have\n    # sum of radii at most d to avoid overlap\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n\n            # If current radii would cause overlap\n            if radii[i] + radii[j] > dist:\n                # Scale both radii proportionally\n                scale = dist / (radii[i] + radii[j] + 1e-7)\n                radii[i] *= scale\n                radii[j] *= scale\n\n    return radii\n\n\n# EVOLVE-BLOCK-END\n\n\ndef _circles_overlap(centers, radii):\n    \"\"\"Protected function to compute max radii.\"\"\"\n    n = centers.shape[0]\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            if radii[i] + radii[j] > dist:\n                return True\n\n    return False\n\n\ndef evaluate(eval_inputs: Mapping[str, Any]) -> dict[str, float]:\n    \"\"\"Construct a packing and evaluate its score.\"\"\"\n    n = eval_inputs[\"n\"]\n    if \"random_seed\" not in eval_inputs:\n        random_seed = 42\n    else:\n        random_seed = eval_inputs[\"random_seed\"]\n    centers, radii, _ = construct_packing(n, random_seed=random_seed)\n    if (\n        centers.shape != (n, 2)\n        or not np.isfinite(centers).all()\n        or not ((radii[:, None] <= centers) & (centers <= 1 - radii[:, None])).all()\n    ):\n        return {\"sum_of_radii\": -np.inf}\n\n    if radii.shape != (n,) or not np.isfinite(radii).all() or not (0 <= radii).all():\n        return {\"sum_of_radii\": -np.inf}\n\n    if _circles_overlap(centers, radii):\n        return {\"sum_of_radii\": -np.inf}\n\n    return {\"sum_of_radii\": float(np.sum(radii))}",
+    "circles": [
+      {
+        "x": 0.5,
+        "y": 0.5,
+        "r": 0.05831897760489374
+      },
+      {
+        "x": 0.8,
+        "y": 0.5,
+        "r": 0.05513524709567154
+      },
+      {
+        "x": 0.7121320343559643,
+        "y": 0.7121320343559643,
+        "r": 0.10466899081936189
+      },
+      {
+        "x": 0.5,
+        "y": 0.8,
+        "r": 0.08482425717596431
+      },
+      {
+        "x": 0.2878679656440358,
+        "y": 0.7121320343559643,
+        "r": 0.09642003166988049
+      },
+      {
+        "x": 0.2,
+        "y": 0.5,
+        "r": 0.08407914379844175
+      },
+      {
+        "x": 0.2878679656440357,
+        "y": 0.2878679656440358,
+        "r": 0.09670724850315675
+      },
+      {
+        "x": 0.49999999999999994,
+        "y": 0.2,
+        "r": 0.09927791934987815
+      },
+      {
+        "x": 0.7121320343559642,
+        "y": 0.2878679656440357,
+        "r": 0.13033206536949976
+      },
+      {
+        "x": 0.99,
+        "y": 0.5,
+        "r": 0.010000000000000009
+      },
+      {
+        "x": 0.99,
+        "y": 0.7647707848727668,
+        "r": 0.010000000000000009
+      },
+      {
+        "x": 0.9663232952241947,
+        "y": 0.99,
+        "r": 0.010000000000000009
+      },
+      {
+        "x": 0.7375249353440538,
+        "y": 0.99,
+        "r": 0.010000000000000009
+      },
+      {
+        "x": 0.5890034872073936,
+        "y": 0.99,
+        "r": 0.010000000000000009
+      },
+      {
+        "x": 0.11669037941250915,
+        "y": 0.99,
+        "r": 0.010000000000000009
+      },
+      {
+        "x": 0.01,
+        "y": 0.9304740633281342,
+        "r": 0.01
+      },
+      {
+        "x": 0.01,
+        "y": 0.6632807702239848,
+        "r": 0.0006004653130355809
+      },
+      {
+        "x": 0.01,
+        "y": 0.6620798335932605,
+        "r": 0.0006004653130355809
+      },
+      {
+        "x": 0.01,
+        "y": 0.25496205747012174,
+        "r": 0.01
+      },
+      {
+        "x": 0.01,
+        "y": 0.05771289154254389,
+        "r": 0.01
+      },
+      {
+        "x": 0.48320119328718203,
+        "y": 0.01,
+        "r": 0.01
+      },
+      {
+        "x": 0.5946222224950893,
+        "y": 0.01,
+        "r": 0.01
+      },
+      {
+        "x": 0.9627492398557607,
+        "y": 0.01,
+        "r": 0.0002452972866306206
+      },
+      {
+        "x": 0.9632398368819948,
+        "y": 0.01,
+        "r": 0.0002452972866306206
+      },
+      {
+        "x": 0.99,
+        "y": 0.04157629293933879,
+        "r": 0.010000000000000009
+      },
+      {
+        "x": 0.01,
+        "y": 0.01,
+        "r": 0.01
+      }
+    ]
+  },
+  {
+    "candidate_id": "1014377268021462461",
+    "score": 2.5572095772003123,
+    "error": "",
+    "code": "# Copyright 2026 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#     http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n# pylint: disable=g-import-not-at-top\n# pylint: disable=g-bad-import-order\n# pylint: disable=pointless-string-statement\nfrom typing import Any, Mapping\n\n# EVOLVE-BLOCK-START\n\"\"\"Constructor-based circle packing for n=26 circles\"\"\"\nimport numpy as np\n\n\nimport scipy.optimize as opt\n\ndef construct_packing(n, random_seed: int):\n    \"\"\"Construct a specific arrangement of circles in a unit square.\n\n    The goal is to maximize the sum of their radii using mathematical optimization.\n\n    Args:\n        n: Number of circles.\n        random_seed: Random seed for reproducibility.\n\n    Returns:\n        Tuple of (centers, radii, sum_of_radii)\n    \"\"\"\n    rng = np.random.default_rng(random_seed)\n\n    def objective(vars):\n        # vars is [x_0, y_0, x_1, y_1, ..., r_0, r_1, ...]\n        return -np.sum(vars[2 * n:])\n        \n    def constraints(vars):\n        centers = vars[:2 * n].reshape((n, 2))\n        radii = vars[2 * n:]\n        \n        cons = []\n        # Subtracting 1e-5 to strictly prevent boundary overlaps due to numeric tolerances\n        cons.extend(centers[:, 0] - radii - 1e-5)\n        cons.extend(1 - centers[:, 0] - radii - 1e-5)\n        cons.extend(centers[:, 1] - radii - 1e-5)\n        cons.extend(1 - centers[:, 1] - radii - 1e-5)\n        \n        # Vectorized pairwise constraints\n        diffs = centers[:, np.newaxis, :] - centers[np.newaxis, :, :]\n        dist_sq = np.sum(diffs ** 2, axis=-1)\n        rad_sums = radii[:, np.newaxis] + radii[np.newaxis, :]\n        \n        # Extract upper triangle for unique pairs\n        idx = np.triu_indices(n, k=1)\n        cons.extend(dist_sq[idx] - (rad_sums[idx] + 1e-5) ** 2)\n                \n        return np.array(cons)\n\n    # Initialize guesses on a generic grid (breaking symmetry w/ tiny jitter)\n    x0 = np.zeros(3 * n)\n    grid_size = int(np.ceil(np.sqrt(n)))\n    for i in range(n):\n        x0[2 * i] = (i % grid_size + 0.5) / grid_size + rng.uniform(-0.01, 0.01)\n        x0[2 * i + 1] = (i // grid_size + 0.5) / grid_size + rng.uniform(-0.01, 0.01)\n    x0[2 * n:] = 0.4 / grid_size  # Feasible initial radii\n    \n    bounds = [(0, 1)] * (3 * n)\n    \n    res = opt.minimize(\n        objective, x0, bounds=bounds,\n        constraints={'type': 'ineq', 'fun': constraints},\n        options={'maxiter': 1000}\n    )\n    \n    centers = res.x[:2 * n].reshape((n, 2))\n    radii = res.x[2 * n:]\n    return centers, radii, np.sum(radii)\n\n\n# EVOLVE-BLOCK-END\n\n\ndef _circles_overlap(centers, radii):\n    \"\"\"Protected function to compute max radii.\"\"\"\n    n = centers.shape[0]\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            if radii[i] + radii[j] > dist:\n                return True\n\n    return False\n\n\ndef evaluate(eval_inputs: Mapping[str, Any]) -> dict[str, float]:\n    \"\"\"Construct a packing and evaluate its score.\"\"\"\n    n = eval_inputs[\"n\"]\n    if \"random_seed\" not in eval_inputs:\n        random_seed = 42\n    else:\n        random_seed = eval_inputs[\"random_seed\"]\n    centers, radii, _ = construct_packing(n, random_seed=random_seed)\n    if (\n        centers.shape != (n, 2)\n        or not np.isfinite(centers).all()\n        or not ((radii[:, None] <= centers) & (centers <= 1 - radii[:, None])).all()\n    ):\n        return {\"sum_of_radii\": -np.inf}\n\n    if radii.shape != (n,) or not np.isfinite(radii).all() or not (0 <= radii).all():\n        return {\"sum_of_radii\": -np.inf}\n\n    if _circles_overlap(centers, radii):\n        return {\"sum_of_radii\": -np.inf}\n\n    return {\"sum_of_radii\": float(np.sum(radii))}",
+    "circles": [
+      {
+        "x": 0.09418773214080846,
+        "y": 0.0941877320936349,
+        "r": 0.09417773199925558
+      },
+      {
+        "x": 0.23629890261361744,
+        "y": 0.05361245102764004,
+        "r": 0.053602450891260714
+      },
+      {
+        "x": 0.3691562409027812,
+        "y": 0.08232132013247652,
+        "r": 0.08231131996151637
+      },
+      {
+        "x": 0.5634893021266456,
+        "y": 0.11470078158889041,
+        "r": 0.11469078146542107
+      },
+      {
+        "x": 0.7353103339110658,
+        "y": 0.06435450486201669,
+        "r": 0.06434450475980256
+      },
+      {
+        "x": 0.8976315020606549,
+        "y": 0.10236849797602299,
+        "r": 0.10235849781800913
+      },
+      {
+        "x": 0.09243477042970612,
+        "y": 0.2807920011597557,
+        "r": 0.0924247703053784
+      },
+      {
+        "x": 0.24350040997226852,
+        "y": 0.1905619578896778,
+        "r": 0.08352627123174437
+      },
+      {
+        "x": 0.40862359183797575,
+        "y": 0.25321996193344914,
+        "r": 0.0930754233067158
+      },
+      {
+        "x": 0.5825744352942818,
+        "y": 0.3227895719330428,
+        "r": 0.09426138480377869
+      },
+      {
+        "x": 0.7422562937751175,
+        "y": 0.22272798793636486,
+        "r": 0.09417122325885151
+      },
+      {
+        "x": 0.9111855886732093,
+        "y": 0.29306031211441175,
+        "r": 0.08880441128481575
+      },
+      {
+        "x": 0.0946638694757062,
+        "y": 0.4678673611197942,
+        "r": 0.09465386933230055
+      },
+      {
+        "x": 0.25912843176091593,
+        "y": 0.37009014953077746,
+        "r": 0.09667085015014704
+      },
+      {
+        "x": 0.43528879148620325,
+        "y": 0.4356505004380226,
+        "r": 0.09128359299697737
+      },
+      {
+        "x": 0.5869765740379692,
+        "y": 0.4853207962542458,
+        "r": 0.06831944400551679
+      },
+      {
+        "x": 0.7613927962358004,
+        "y": 0.4305224399507969,
+        "r": 0.11449254124984998
+      },
+      {
+        "x": 0.9377643765407997,
+        "y": 0.4417433982928114,
+        "r": 0.06222562335027817
+      },
+      {
+        "x": 0.07564887690278199,
+        "y": 0.6371052286719272,
+        "r": 0.07563887685049642
+      },
+      {
+        "x": 0.28114732222343575,
+        "y": 0.5990569313186443,
+        "r": 0.1333422319148266
+      },
+      {
+        "x": 0.49108336272089564,
+        "y": 0.5940482572738461,
+        "r": 0.07664354841780621
+      },
+      {
+        "x": 0.6783917056495123,
+        "y": 0.647991525986313,
+        "r": 0.11826769573309695
+      },
+      {
+        "x": 0.8513311999368793,
+        "y": 0.8513312001317179,
+        "r": 0.14865879862854076
+      },
+      {
+        "x": 0.8959921130525378,
+        "y": 0.6026429262622822,
+        "r": 0.10399788682371824
+      },
+      {
+        "x": 0.14991676811032523,
+        "y": 0.8500832306574999,
+        "r": 0.14990676798483044
+      },
+      {
+        "x": 0.46481371231483665,
+        "y": 0.8346309200707889,
+        "r": 0.1653590786753769
+      }
+    ]
+  },
+  {
+    "candidate_id": "1014377268021462807",
+    "score": 2.307227492098305,
+    "error": "",
+    "code": "# Copyright 2026 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#     http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n# pylint: disable=g-import-not-at-top\n# pylint: disable=g-bad-import-order\n# pylint: disable=pointless-string-statement\nfrom typing import Any, Mapping\n\n# EVOLVE-BLOCK-START\n\"\"\"Constructor-based circle packing for n=26 circles\"\"\"\nimport numpy as np\nfrom scipy.optimize import linprog\n\n\ndef compute_max_radii_fast(centers):\n    n = centers.shape[0]\n    radii = np.ones(n)\n    for i in range(n):\n        x, y = centers[i]\n        radii[i] = min(x, y, 1 - x, 1 - y)\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            if radii[i] + radii[j] > dist:\n                scale = dist / (radii[i] + radii[j] + 1e-7)\n                radii[i] *= scale\n                radii[j] *= scale\n    return radii\n\n\ndef compute_max_radii_lp(centers):\n    n = centers.shape[0]\n    c = -np.ones(n)\n\n    bounds = []\n    for i in range(n):\n        x, y = centers[i]\n        max_r = min(x, y, 1 - x, 1 - y)\n        bounds.append((0.0, max(0.0, max_r - 1e-6)))\n\n    A = []\n    b = []\n    for i in range(n):\n        for j in range(i + 1, n):\n            row = np.zeros(n)\n            row[i] = 1.0\n            row[j] = 1.0\n            dist = np.linalg.norm(centers[i] - centers[j])\n            A.append(row)\n            b.append(max(0.0, dist - 1e-6))\n\n    try:\n        res = linprog(c, A_ub=A, b_ub=b, bounds=bounds, method=\"highs\")\n    except Exception:\n        try:\n            res = linprog(c, A_ub=A, b_ub=b, bounds=bounds)\n        except Exception:\n            return compute_max_radii_fast(centers)\n\n    if res.success:\n        return res.x\n    else:\n        return compute_max_radii_fast(centers)\n\n\ndef get_grid_initializations(n, rng):\n    candidates = []\n    for w in range(2, 12):\n        for h in range(2, 12):\n            if w * h < n:\n                continue\n            xs = np.linspace(1 / (2 * w), 1 - 1 / (2 * w), w)\n            ys = np.linspace(1 / (2 * h), 1 - 1 / (2 * h), h)\n            grid_points = []\n            for y in ys:\n                for x in xs:\n                    grid_points.append([x, y])\n            grid_points = np.array(grid_points)\n\n            candidates.append(grid_points[:n])\n            dist_to_center = np.linalg.norm(grid_points - 0.5, axis=1)\n            idx_center = np.argsort(dist_to_center)[:n]\n            candidates.append(grid_points[idx_center])\n\n            if w * h > n:\n                for _ in range(3):\n                    idx_rand = rng.choice(w * h, size=n, replace=False)\n                    candidates.append(grid_points[idx_rand])\n    return candidates\n\n\ndef get_triangular_initializations(n, rng):\n    candidates = []\n    for w in range(2, 12):\n        for h in range(2, 12):\n            if w * h < n:\n                continue\n            grid_points = []\n            for r in range(h):\n                for c in range(w):\n                    x = c + 0.5 * (r % 2)\n                    y = r * np.sqrt(3) / 2\n                    grid_points.append([x, y])\n            grid_points = np.array(grid_points)\n            min_val = grid_points.min(axis=0)\n            max_val = grid_points.max(axis=0)\n            grid_points = 0.05 + 0.9 * (grid_points - min_val) / (\n                max_val - min_val + 1e-9\n            )\n\n            candidates.append(grid_points[:n])\n            dist_to_center = np.linalg.norm(grid_points - 0.5, axis=1)\n            idx_center = np.argsort(dist_to_center)[:n]\n            candidates.append(grid_points[idx_center])\n\n            if w * h > n:\n                for _ in range(3):\n                    idx_rand = rng.choice(w * h, size=n, replace=False)\n                    candidates.append(grid_points[idx_rand])\n    return candidates\n\n\ndef get_spiral_initialization(n):\n    indices = np.arange(0, n) + 0.5\n    r = np.sqrt(indices / n) / 2\n    theta = np.pi * (1 + 5**0.5) * indices\n    x = 0.5 + r * np.cos(theta)\n    y = 0.5 + r * np.sin(theta)\n    return np.column_stack((x, y))\n\n\ndef get_all_initializations(n, rng):\n    candidates = []\n    candidates.extend(get_grid_initializations(n, rng))\n    candidates.extend(get_triangular_initializations(n, rng))\n    candidates.append(get_spiral_initialization(n))\n\n    centers_concentric = np.zeros((n, 2))\n    centers_concentric[0] = [0.5, 0.5]\n    for i in range(8):\n        angle = 2 * np.pi * i / 8\n        centers_concentric[i + 1] = [\n            0.5 + 0.3 * np.cos(angle),\n            0.5 + 0.3 * np.sin(angle),\n        ]\n    for i in range(17):\n        if i + 9 >= n:\n            break\n        angle = 2 * np.pi * i / 17\n        centers_concentric[i + 9] = [\n            0.5 + 0.7 * np.cos(angle),\n            0.5 + 0.7 * np.sin(angle),\n        ]\n    candidates.append(centers_concentric)\n\n    for _ in range(20):\n        candidates.append(rng.uniform(0.05, 0.95, size=(n, 2)))\n\n    cleaned_candidates = []\n    for c in candidates:\n        if c.shape == (n, 2):\n            c_clipped = np.clip(c, 0.01, 0.99)\n            cleaned_candidates.append(c_clipped)\n\n    return cleaned_candidates\n\n\ndef force_directed_relaxation(centers, steps=500, lr=0.005, decay=0.9):\n    n = len(centers)\n    vel = np.zeros_like(centers)\n    best_centers = centers.copy()\n    best_sum = 0\n\n    for step in range(steps):\n        diff = centers[:, np.newaxis, :] - centers[np.newaxis, :, :]\n        dist = np.linalg.norm(diff, axis=2)\n        np.fill_diagonal(dist, 1.0)\n        dist3 = dist[:, :, np.newaxis] ** 3\n\n        forces_pairwise = (diff / dist3).sum(axis=1)\n\n        x = centers[:, 0]\n        y = centers[:, 1]\n        forces_boundary = np.zeros_like(centers)\n        forces_boundary[:, 0] = 1.0 / (x**2 + 1e-8) - 1.0 / (\n            (1 - x) ** 2 + 1e-8\n        )\n        forces_boundary[:, 1] = 1.0 / (y**2 + 1e-8) - 1.0 / (\n            (1 - y) ** 2 + 1e-8\n        )\n\n        forces = forces_pairwise * 0.01 + forces_boundary * 0.05\n\n        vel = vel * decay + forces * lr\n        step_len = np.linalg.norm(vel, axis=1, keepdims=True) + 1e-8\n        max_step = 0.02\n        vel = np.where(step_len > max_step, vel / step_len * max_step, vel)\n\n        centers += vel\n        centers = np.clip(centers, 0.01, 0.99)\n\n        if step % 50 == 0 or step == steps - 1:\n            radii = compute_max_radii_fast(centers)\n            s = np.sum(radii)\n            if s > best_sum:\n                best_sum = s\n                best_centers = centers.copy()\n\n    return best_centers\n\n\ndef construct_packing(n, random_seed: int):\n    \"\"\"Construct a specific arrangement of 26 circles in a unit square.\n\n    The goal is to maximize the sum of their radii.\n\n    Args:\n        n: Number of circles.\n        random_seed: Random seed for reproducibility.\n\n    Returns:\n        Tuple of (centers, radii, sum_of_radii)\n        centers: np.array of shape (26, 2) with (x, y) coordinates\n        radii: np.array of shape (26) with radius of each circle\n        sum_of_radii: Sum of all radii\n    \"\"\"\n    rng = np.random.default_rng(random_seed)\n\n    # 1. Gather all candidate initializations\n    candidates = get_all_initializations(n, rng)\n\n    # 2. Evaluate all candidates using the fast radii computation\n    candidate_scores = []\n    for c in candidates:\n        radii = compute_max_radii_fast(c)\n        candidate_scores.append(np.sum(radii))\n\n    # Sort candidates in descending order of score\n    sorted_idx = np.argsort(candidate_scores)[::-1]\n    sorted_candidates = [candidates[i] for i in sorted_idx]\n\n    # 3. Take the top K candidates for relaxation\n    top_k = sorted_candidates[:15]\n    relaxed_candidates = []\n    relaxed_scores = []\n\n    for c in top_k:\n        relaxed_c = force_directed_relaxation(c)\n        radii_fast = compute_max_radii_fast(relaxed_c)\n        score_fast = np.sum(radii_fast)\n        relaxed_candidates.append(relaxed_c)\n        relaxed_scores.append(score_fast)\n\n    # Sort the relaxed candidates\n    sorted_relaxed_idx = np.argsort(relaxed_scores)[::-1]\n    best_relaxed_candidates = [relaxed_candidates[i] for i in sorted_relaxed_idx]\n\n    # 4. Run the LP solver on the top 5 relaxed candidates to find the absolute best\n    best_centers = None\n    best_radii = None\n    best_sum = -1.0\n\n    for i in range(min(5, len(best_relaxed_candidates))):\n        centers = best_relaxed_candidates[i]\n        radii = compute_max_radii_lp(centers)\n        s = np.sum(radii)\n        if s > best_sum:\n            best_sum = s\n            best_centers = centers\n            best_radii = radii\n\n    # If something went wrong, fallback to the best fast candidate\n    if best_centers is None:\n        best_centers = best_relaxed_candidates[0]\n        best_radii = compute_max_radii_fast(best_centers)\n        best_sum = np.sum(best_radii)\n\n    return best_centers, best_radii, best_sum\n\n\n# EVOLVE-BLOCK-END\n\n\ndef _circles_overlap(centers, radii):\n    \"\"\"Protected function to compute max radii.\"\"\"\n    n = centers.shape[0]\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            if radii[i] + radii[j] > dist:\n                return True\n\n    return False\n\n\ndef evaluate(eval_inputs: Mapping[str, Any]) -> dict[str, float]:\n    \"\"\"Construct a packing and evaluate its score.\"\"\"\n    n = eval_inputs[\"n\"]\n    if \"random_seed\" not in eval_inputs:\n        random_seed = 42\n    else:\n        random_seed = eval_inputs[\"random_seed\"]\n    centers, radii, _ = construct_packing(n, random_seed=random_seed)\n    if (\n        centers.shape != (n, 2)\n        or not np.isfinite(centers).all()\n        or not ((radii[:, None] <= centers) & (centers <= 1 - radii[:, None])).all()\n    ):\n        return {\"sum_of_radii\": -np.inf}\n\n    if radii.shape != (n,) or not np.isfinite(radii).all() or not (0 <= radii).all():\n        return {\"sum_of_radii\": -np.inf}\n\n    if _circles_overlap(centers, radii):\n        return {\"sum_of_radii\": -np.inf}\n\n    return {\"sum_of_radii\": float(np.sum(radii))}",
+    "circles": [
+      {
+        "x": 0.4101440903959319,
+        "y": 0.4998824346224237,
+        "r": 0.09994734789555831
+      },
+      {
+        "x": 0.5897618569970652,
+        "y": 0.6122565533509033,
+        "r": 0.1104553481666787
+      },
+      {
+        "x": 0.5897142475941178,
+        "y": 0.38761877223505736,
+        "r": 0.11052291711270469
+      },
+      {
+        "x": 0.41024554629642157,
+        "y": 0.7238378218973853,
+        "r": 0.09977908006392652
+      },
+      {
+        "x": 0.41005049104104724,
+        "y": 0.27593975405896665,
+        "r": 0.09939101201024494
+      },
+      {
+        "x": 0.7675940760703107,
+        "y": 0.49996324040300777,
+        "r": 0.09986266256066569
+      },
+      {
+        "x": 0.2323993363919378,
+        "y": 0.6120985453312286,
+        "r": 0.11025548907834459
+      },
+      {
+        "x": 0.23228220177837725,
+        "y": 0.3874633851485546,
+        "r": 0.1104629020584583
+      },
+      {
+        "x": 0.5897142475941178,
+        "y": 0.8315634642037387,
+        "r": 0.1088505678539264
+      },
+      {
+        "x": 0.5895843798214855,
+        "y": 0.16835779134072806,
+        "r": 0.10873710224181214
+      },
+      {
+        "x": 0.7674926201698211,
+        "y": 0.7237570161168013,
+        "r": 0.09906038467595367
+      },
+      {
+        "x": 0.7674462000083846,
+        "y": 0.2761816654386923,
+        "r": 0.09925424114055971
+      },
+      {
+        "x": 0.23274097429658766,
+        "y": 0.8312920849475157,
+        "r": 0.10771520115589023
+      },
+      {
+        "x": 0.2318170034888996,
+        "y": 0.16804506705483058,
+        "r": 0.1089549091782431
+      },
+      {
+        "x": 0.06999993083050306,
+        "y": 0.49994820355522707,
+        "r": 0.06999893083050306
+      },
+      {
+        "x": 0.4100831781077791,
+        "y": 0.9300001749376227,
+        "r": 0.06999882506237734
+      },
+      {
+        "x": 0.4100062684791058,
+        "y": 0.06999999691527853,
+        "r": 0.06999899691527853
+      },
+      {
+        "x": 0.9300001788466542,
+        "y": 0.6124158312172583,
+        "r": 0.0699988211533458
+      },
+      {
+        "x": 0.9300001432712434,
+        "y": 0.3875752420716613,
+        "r": 0.06999885672875664
+      },
+      {
+        "x": 0.06999678691825377,
+        "y": 0.7246416296037919,
+        "r": 0.06999578691825377
+      },
+      {
+        "x": 0.06999958299029878,
+        "y": 0.275128827478348,
+        "r": 0.06999858299029878
+      },
+      {
+        "x": 0.7693926403342575,
+        "y": 0.9300092262285273,
+        "r": 0.06998977377147267
+      },
+      {
+        "x": 0.7693771832964934,
+        "y": 0.06999029804407449,
+        "r": 0.06998929804407449
+      },
+      {
+        "x": 0.9300472832118498,
+        "y": 0.8361255822338775,
+        "r": 0.06995171678815018
+      },
+      {
+        "x": 0.9300468150252107,
+        "y": 0.1638676039108024,
+        "r": 0.0699521849747893
+      },
+      {
+        "x": 0.06417663222363816,
+        "y": 0.9358924472719627,
+        "r": 0.06410655272803725
+      }
+    ]
+  },
+  {
+    "candidate_id": "1014377268021461591",
+    "score": 2.132200140788197,
+    "error": "",
+    "code": "# Copyright 2026 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#     http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n# pylint: disable=g-import-not-at-top\n# pylint: disable=g-bad-import-order\n# pylint: disable=pointless-string-statement\nfrom typing import Any, Mapping\n\n# EVOLVE-BLOCK-START\n\"\"\"Constructor-based circle packing for n=26 circles\"\"\"\nimport numpy as np\n\n\ndef compute_max_radii_heuristic_vectorized(centers):\n    n = len(centers)\n    radii = np.minimum(\n        np.minimum(centers[:, 0], centers[:, 1]),\n        np.minimum(1.0 - centers[:, 0], 1.0 - centers[:, 1]),\n    )\n    diffs = centers[:, np.newaxis, :] - centers[np.newaxis, :, :]\n    dists = np.sqrt(np.sum(diffs**2, axis=-1))\n\n    for _ in range(3):\n        sum_r = radii[:, np.newaxis] + radii[np.newaxis, :]\n        overlap = sum_r - dists\n        overlap[np.diag_indices(n)] = 0.0\n\n        scale_matrix = dists / (sum_r + 1e-9)\n        scale_matrix[dists == 0] = 1.0\n        scale_matrix = np.where(overlap > 0, scale_matrix, 1.0)\n        min_scales = np.min(scale_matrix, axis=1)\n        radii *= min_scales\n\n    return radii\n\n\ndef relax_centers(centers, rng, num_steps=200):\n    n = len(centers)\n    centers = centers.copy()\n    for step in range(num_steps):\n        radii = compute_max_radii_heuristic_vectorized(centers)\n        diffs = centers[:, np.newaxis, :] - centers[np.newaxis, :, :]\n        dists = np.sqrt(np.sum(diffs**2, axis=-1, keepdims=True))\n\n        sum_r = radii[:, np.newaxis, np.newaxis] + radii[np.newaxis, :, np.newaxis]\n        overlap = sum_r - dists\n\n        mask = (overlap > 0) & (dists > 0)\n        force_direction = diffs / (dists + 1e-9)\n        pairwise_forces = np.where(mask, (overlap / (dists + 1e-9)) * force_direction, 0.0)\n        forces = np.sum(pairwise_forces, axis=1)\n\n        left_dist = centers[:, 0]\n        right_dist = 1.0 - centers[:, 0]\n        forces[:, 0] += np.where(left_dist < radii, radii - left_dist, 0.0)\n        forces[:, 0] -= np.where(right_dist < radii, radii - right_dist, 0.0)\n\n        bottom_dist = centers[:, 1]\n        top_dist = 1.0 - centers[:, 1]\n        forces[:, 1] += np.where(bottom_dist < radii, radii - bottom_dist, 0.0)\n        forces[:, 1] -= np.where(top_dist < radii, radii - top_dist, 0.0)\n\n        step_size = 0.05 * (1.0 - step / num_steps)\n\n        if step < num_steps // 3:\n            noise = rng.normal(0, 1e-3 * (1 - step / (num_steps // 3)), centers.shape)\n            centers += noise\n\n        force_norm = np.linalg.norm(forces, axis=1, keepdims=True)\n        max_force = 0.05\n        scale = np.minimum(1.0, max_force / (force_norm + 1e-8))\n        forces *= scale\n\n        centers += step_size * forces\n        centers = np.clip(centers, 1e-5, 1 - 1e-5)\n\n    return centers\n\n\ndef construct_packing(n, random_seed: int):\n    \"\"\"Construct a specific arrangement of 26 circles in a unit square.\n\n    The goal is to maximize the sum of their radii.\n\n    Args:\n        n: Number of circles.\n        random_seed: Random seed for reproducibility.\n\n    Returns:\n        Tuple of (centers, radii, sum_of_radii)\n        centers: np.array of shape (26, 2) with (x, y) coordinates\n        radii: np.array of shape (26) with radius of each circle\n        sum_of_radii: Sum of all radii\n    \"\"\"\n    rng = np.random.default_rng(random_seed)\n    candidates = []\n\n    # 1. Concentric rings (various configurations)\n    if n >= 9:\n        c = np.zeros((n, 2))\n        c[0] = [0.5, 0.5]\n        r1 = min(8, n - 1)\n        for i in range(r1):\n            angle = 2 * np.pi * i / r1\n            c[i + 1] = [0.5 + 0.25 * np.cos(angle), 0.5 + 0.25 * np.sin(angle)]\n        r2 = n - 1 - r1\n        if r2 > 0:\n            for i in range(r2):\n                angle = 2 * np.pi * i / r2\n                c[i + 1 + r1] = [0.5 + 0.45 * np.cos(angle), 0.5 + 0.45 * np.sin(angle)]\n        candidates.append(c)\n\n    if n >= 20:\n        c = np.zeros((n, 2))\n        c[0] = [0.5, 0.5]\n        for i in range(6):\n            angle = 2 * np.pi * i / 6\n            c[i + 1] = [0.5 + 0.18 * np.cos(angle), 0.5 + 0.18 * np.sin(angle)]\n        for i in range(12):\n            angle = 2 * np.pi * i / 12\n            c[i + 7] = [0.5 + 0.35 * np.cos(angle), 0.5 + 0.35 * np.sin(angle)]\n        r3 = n - 19\n        for i in range(r3):\n            angle = 2 * np.pi * i / r3\n            c[i + 19] = [0.5 + 0.46 * np.cos(angle), 0.5 + 0.46 * np.sin(angle)]\n        candidates.append(c)\n\n    # 2. Fibonacci spiral\n    c = np.zeros((n, 2))\n    golden_ratio = (1 + 5**0.5) / 2\n    for i in range(n):\n        theta = 2 * np.pi * i / golden_ratio**2\n        r = 0.45 * np.sqrt((i + 0.5) / n)\n        c[i] = [0.5 + r * np.cos(theta), 0.5 + r * np.sin(theta)]\n    candidates.append(c)\n\n    # 3. Hexagonal lattices\n    for rows in [6, 7]:\n        for cols in [6, 7]:\n            pts = []\n            for r in range(rows):\n                for col in range(cols):\n                    x = (col + 0.5 * (r % 2)) / (cols - 0.5) if cols > 1 else 0.5\n                    y = r / (rows - 1) if rows > 1 else 0.5\n                    pts.append([x, y])\n            pts = np.array(pts)\n            pts = 0.05 + 0.9 * pts\n            if len(pts) >= n:\n                dists = np.sum((pts - 0.5) ** 2, axis=1)\n                idx = np.argsort(dists)[:n]\n                candidates.append(pts[idx])\n\n    # 4. Grid selections\n    grid_w = int(np.ceil(np.sqrt(n * 1.2)))\n    grid_h = int(np.ceil(n * 1.2 / grid_w))\n    xs = np.linspace(0.1, 0.9, grid_w)\n    ys = np.linspace(0.1, 0.9, grid_h)\n    grid = np.array([[x, y] for x in xs for y in ys])\n    if len(grid) >= n:\n        for _ in range(5):\n            idx = rng.choice(len(grid), n, replace=False)\n            candidates.append(grid[idx])\n\n    # 5. Random uniform\n    for _ in range(5):\n        candidates.append(rng.uniform(0.1, 0.9, (n, 2)))\n\n    # Relax candidates\n    relaxed_candidates = []\n    heuristic_scores = []\n    for cand in candidates:\n        relaxed = relax_centers(cand, rng, num_steps=200)\n        relaxed_candidates.append(relaxed)\n        h_radii = compute_max_radii_heuristic_vectorized(relaxed)\n        heuristic_scores.append(np.sum(h_radii))\n\n    top_indices = np.argsort(heuristic_scores)[::-1][:6]\n    best_centers = None\n    best_radii = None\n    best_sum = -1.0\n\n    for idx in top_indices:\n        cand = relaxed_candidates[idx]\n        radii = compute_max_radii(cand, random_seed)\n        s = np.sum(radii)\n        if s > best_sum:\n            best_sum = s\n            best_centers = cand\n            best_radii = radii\n\n    return best_centers, best_radii, best_sum\n\n\ndef compute_max_radii(centers, random_seed: int = 42):\n    \"\"\"Compute the maximum possible radii for each circle position.\n\n    Make sure that they don't overlap and stay within the unit square.\n\n    Args:\n        centers: np.array of shape (n, 2) with (x, y) coordinates\n        random_seed: Random seed for reproducibility.\n\n    Returns:\n        np.array of shape (n) with radius of each circle\n    \"\"\"\n    try:\n        from scipy.optimize import linprog\n\n        n = centers.shape[0]\n        c = -np.ones(n)\n        bounds = []\n        for i in range(n):\n            x, y = centers[i]\n            max_r = min(x, y, 1 - x, 1 - y)\n            bounds.append((0.0, max(1e-6, max_r)))\n\n        A = []\n        b = []\n        for i in range(n):\n            for j in range(i + 1, n):\n                dist = np.linalg.norm(centers[i] - centers[j])\n                row = np.zeros(n)\n                row[i] = 1.0\n                row[j] = 1.0\n                A.append(row)\n                b.append(dist)\n\n        res = linprog(c, A_ub=A, b_ub=b, bounds=bounds, method=\"highs\")\n        if res.success:\n            return res.x\n    except Exception:\n        pass\n\n    # Fallback to a simple heuristic if LP fails\n    n = centers.shape[0]\n    radii = np.ones(n)\n    for i in range(n):\n        x, y = centers[i]\n        radii[i] = min(x, y, 1 - x, 1 - y)\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            if radii[i] + radii[j] > dist:\n                scale = dist / (radii[i] + radii[j] + 1e-7)\n                radii[i] *= scale\n                radii[j] *= scale\n    return radii\n\n\n# EVOLVE-BLOCK-END\n\n\ndef _circles_overlap(centers, radii):\n    \"\"\"Protected function to compute max radii.\"\"\"\n    n = centers.shape[0]\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            if radii[i] + radii[j] > dist:\n                return True\n\n    return False\n\n\ndef evaluate(eval_inputs: Mapping[str, Any]) -> dict[str, float]:\n    \"\"\"Construct a packing and evaluate its score.\"\"\"\n    n = eval_inputs[\"n\"]\n    if \"random_seed\" not in eval_inputs:\n        random_seed = 42\n    else:\n        random_seed = eval_inputs[\"random_seed\"]\n    centers, radii, _ = construct_packing(n, random_seed=random_seed)\n    if (\n        centers.shape != (n, 2)\n        or not np.isfinite(centers).all()\n        or not ((radii[:, None] <= centers) & (centers <= 1 - radii[:, None])).all()\n    ):\n        return {\"sum_of_radii\": -np.inf}\n\n    if radii.shape != (n,) or not np.isfinite(radii).all() or not (0 <= radii).all():\n        return {\"sum_of_radii\": -np.inf}\n\n    if _circles_overlap(centers, radii):\n        return {\"sum_of_radii\": -np.inf}\n\n    return {\"sum_of_radii\": float(np.sum(radii))}",
+    "circles": [
+      {
+        "x": 0.4969188296824965,
+        "y": 0.5002093151453266,
+        "r": 0.14997453820264944
+      },
+      {
+        "x": 0.7486734756454994,
+        "y": 0.49948623476396553,
+        "r": 0.10178114616057365
+      },
+      {
+        "x": 0.6652002786282666,
+        "y": 0.6754741409151863,
+        "r": 0.0929995452124899
+      },
+      {
+        "x": 0.49651585965267714,
+        "y": 0.7518151595547995,
+        "r": 0.092155482621123
+      },
+      {
+        "x": 0.3170994439936078,
+        "y": 0.6804027730213117,
+        "r": 0.10095065181886889
+      },
+      {
+        "x": 0.2398796656289263,
+        "y": 0.49167305665700534,
+        "r": 0.10296550744675198
+      },
+      {
+        "x": 0.32505516834524634,
+        "y": 0.32970610359644503,
+        "r": 0.0800321978577124
+      },
+      {
+        "x": 0.5033914285533052,
+        "y": 0.25370541951891046,
+        "r": 0.09661432021382782
+      },
+      {
+        "x": 0.6736381376591232,
+        "y": 0.3159990604245553,
+        "r": 0.08467119950201277
+      },
+      {
+        "x": 0.9479361856626356,
+        "y": 0.49287350988362255,
+        "r": 0.0520638143373644
+      },
+      {
+        "x": 0.918260879790061,
+        "y": 0.6562838145983022,
+        "r": 0.08173912020993901
+      },
+      {
+        "x": 0.8338316481045325,
+        "y": 0.8110318970990436,
+        "r": 0.057942087483959126
+      },
+      {
+        "x": 0.704543974751857,
+        "y": 0.9006380400573102,
+        "r": 0.09936195994268981
+      },
+      {
+        "x": 0.5329328761319194,
+        "y": 0.9463092793150601,
+        "r": 0.05369072068493985
+      },
+      {
+        "x": 0.37185888134044337,
+        "y": 0.92593920252944,
+        "r": 0.07406079747056005
+      },
+      {
+        "x": 0.2283481241991213,
+        "y": 0.8655323307807983,
+        "r": 0.08164510341226575
+      },
+      {
+        "x": 0.1113210669024766,
+        "y": 0.7313874661964149,
+        "r": 0.09637224639913525
+      },
+      {
+        "x": 0.057368286451933634,
+        "y": 0.5797470846358338,
+        "r": 0.057368286451933634
+      },
+      {
+        "x": 0.05903847202357998,
+        "y": 0.4083114792947347,
+        "r": 0.05903847202357998
+      },
+      {
+        "x": 0.12198723531426191,
+        "y": 0.26472995138447375,
+        "r": 0.040586841978279345
+      },
+      {
+        "x": 0.22120924494023533,
+        "y": 0.14710033824438476,
+        "r": 0.11330186157628232
+      },
+      {
+        "x": 0.3742135126661159,
+        "y": 0.06184952285249053,
+        "r": 0.06184952285249053
+      },
+      {
+        "x": 0.5507857849927349,
+        "y": 0.053998580008457066,
+        "r": 0.053998580008457066
+      },
+      {
+        "x": 0.7092124233686564,
+        "y": 0.09235021300161159,
+        "r": 0.09235021300161159
+      },
+      {
+        "x": 0.8351829340401028,
+        "y": 0.20448993331830512,
+        "r": 0.06964525051016321
+      },
+      {
+        "x": 0.9149593265914638,
+        "y": 0.3370171465617473,
+        "r": 0.08504067340853616
+      }
+    ]
+  },
+  {
+    "candidate_id": "1014377268021464359",
+    "score": 2.593086232248051,
+    "error": "",
+    "code": "# Copyright 2026 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#     http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n# pylint: disable=g-import-not-at-top\n# pylint: disable=g-bad-import-order\n# pylint: disable=pointless-string-statement\nfrom typing import Any, Mapping\n\n# EVOLVE-BLOCK-START\n\"\"\"Constructor-based circle packing for n=26 circles\"\"\"\nimport numpy as np\n\n\nimport scipy.optimize as opt\n\ndef construct_packing(n, random_seed: int):\n    \"\"\"Construct a specific arrangement of circles in a unit square.\n\n    The goal is to maximize the sum of their radii using mathematical optimization.\n\n    Args:\n        n: Number of circles.\n        random_seed: Random seed for reproducibility.\n\n    Returns:\n        Tuple of (centers, radii, sum_of_radii)\n    \"\"\"\n    rng = np.random.default_rng(random_seed)\n\n    def objective(vars):\n        # vars is [x_0, y_0, x_1, y_1, ..., r_0, r_1, ...]\n        return -np.sum(vars[2 * n:])\n        \n    def constraints(vars):\n        centers = vars[:2 * n].reshape((n, 2))\n        radii = vars[2 * n:]\n        \n        cons = []\n        # Subtracting 1e-5 to strictly prevent boundary overlaps due to numeric tolerances\n        cons.extend(centers[:, 0] - radii - 1e-5)\n        cons.extend(1 - centers[:, 0] - radii - 1e-5)\n        cons.extend(centers[:, 1] - radii - 1e-5)\n        cons.extend(1 - centers[:, 1] - radii - 1e-5)\n        \n        # Vectorized pairwise constraints\n        diffs = centers[:, np.newaxis, :] - centers[np.newaxis, :, :]\n        dist_sq = np.sum(diffs ** 2, axis=-1)\n        rad_sums = radii[:, np.newaxis] + radii[np.newaxis, :]\n        \n        # Extract upper triangle for unique pairs\n        idx = np.triu_indices(n, k=1)\n        cons.extend(dist_sq[idx] - (rad_sums[idx] + 1e-5) ** 2)\n                \n        return np.array(cons)\n\n    bounds = [(0, 1)] * (3 * n)\n    best_res = None\n    best_val = np.inf\n    best_res_fallback = None\n    best_val_fallback = np.inf\n    \n    # \ud83c\udf0c CRAZY IDEA: The Quantum Multiverse Optimizer! \ud83c\udf0c\n    # We spawn multiple parallel universes with drastically different topological structures \n    # (Apollonian gaskets, Twin Suns, Sunflower Spirals, and Big Bang physics relaxations).\n    # We let each universe evolve locally via SLSQP, then select the timeline with the maximum sum of radii!\n    multiverse_x0 = []\n    \n    # Universe 0: Classic grid (The Baseline Timeline)\n    x0_0 = np.zeros(3 * n)\n    grid_size = int(np.ceil(np.sqrt(n)))\n    for i in range(n):\n        x0_0[2 * i] = (i % grid_size + 0.5) / grid_size + rng.uniform(-0.01, 0.01)\n        x0_0[2 * i + 1] = (i // grid_size + 0.5) / grid_size + rng.uniform(-0.01, 0.01)\n    x0_0[2 * n:] = 0.4 / grid_size\n    multiverse_x0.append(x0_0)\n\n    # Universe 1: Apollonian Gas Giant (One massive center, smaller ones filling gaps)\n    x0_1 = np.zeros(3 * n)\n    c1, r1 = [[0.5, 0.5]], [0.4]\n    for cx, cy in [(0.15, 0.15), (0.15, 0.85), (0.85, 0.15), (0.85, 0.85)]:\n        c1.append([cx, cy])\n        r1.append(0.09)\n    for _ in range(n - 5):\n        c1.append(rng.uniform(0.1, 0.9, 2))\n        r1.append(rng.uniform(0.01, 0.04))\n    x0_1[:2*n] = np.array(c1).flatten()\n    x0_1[2*n:] = r1\n    multiverse_x0.append(x0_1)\n\n    # Universe 2: Twin Suns (Two large binary stars with planetary disks)\n    x0_2 = np.zeros(3 * n)\n    c2, r2 = [[0.25, 0.5], [0.75, 0.5]], [0.24, 0.24]\n    for cx, cy in [(0.5, 0.15), (0.5, 0.85)]:\n        c2.append([cx, cy])\n        r2.append(0.14)\n    for _ in range(n - 4):\n        c2.append(rng.uniform(0.1, 0.9, 2))\n        r2.append(rng.uniform(0.01, 0.04))\n    x0_2[:2*n] = np.array(c2).flatten()\n    x0_2[2*n:] = r2\n    multiverse_x0.append(x0_2)\n    \n    # Universe 3: The Sunflower Spiral (Phyllotaxis distribution)\n    x0_3 = np.zeros(3 * n)\n    c3, r3 = [], []\n    phi = (1 + np.sqrt(5)) / 2\n    for i in range(n):\n        rad_dist = np.sqrt((i + 0.5) / n) * 0.45\n        theta = 2 * np.pi * i / phi\n        c3.append([0.5 + rad_dist * np.cos(theta), 0.5 + rad_dist * np.sin(theta)])\n        r3.append(0.04)\n    x0_3[:2*n] = np.array(c3).flatten()\n    x0_3[2*n:] = r3\n    multiverse_x0.append(x0_3)\n\n    # Universe 4: Big Bang Physics Relaxation (Chaotic start with repulsive forces)\n    x0_4 = np.zeros(3 * n)\n    c4 = rng.uniform(0.1, 0.9, (n, 2))\n    r4 = rng.uniform(0.03, 0.12, n)\n    for _ in range(100):\n        c4 = np.clip(c4, r4[:, None] + 0.01, 1 - r4[:, None] - 0.01)\n        for i in range(n):\n            for j in range(i + 1, n):\n                diff = c4[i] - c4[j]\n                dist = np.linalg.norm(diff) + 1e-9\n                overlap = r4[i] + r4[j] - dist\n                if overlap > 0:\n                    c4[i] += (diff / dist) * overlap * 0.5\n                    c4[j] -= (diff / dist) * overlap * 0.5\n    x0_4[:2*n] = c4.flatten()\n    x0_4[2*n:] = r4\n    multiverse_x0.append(x0_4)\n\n    # Evolve the multiverse!\n    for x0_universe in multiverse_x0:\n        res = opt.minimize(\n            objective, x0_universe, bounds=bounds,\n            constraints={'type': 'ineq', 'fun': constraints},\n            options={'maxiter': 500}\n        )\n        \n        # Determine if this universe reached a valid physical state\n        cons_vals = constraints(res.x)\n        max_viol = -np.min(np.append(cons_vals, 0.0))\n        \n        # We accept if violations are within small numeric tolerance\n        if max_viol < 1e-3 and res.fun < best_val:\n            best_val = res.fun\n            best_res = res.x\n            \n        # Track the absolute best objective as a fallback\n        if res.fun < best_val_fallback:\n            best_val_fallback = res.fun\n            best_res_fallback = res.x\n            \n    # Collapse the wavefunction to the best surviving timeline\n    if best_res is None:\n        best_res = best_res_fallback\n\n    centers = best_res[:2 * n].reshape((n, 2))\n    radii = best_res[2 * n:]\n    return centers, radii, np.sum(radii)\n\n\n# EVOLVE-BLOCK-END\n\n\ndef _circles_overlap(centers, radii):\n    \"\"\"Protected function to compute max radii.\"\"\"\n    n = centers.shape[0]\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            if radii[i] + radii[j] > dist:\n                return True\n\n    return False\n\n\ndef evaluate(eval_inputs: Mapping[str, Any]) -> dict[str, float]:\n    \"\"\"Construct a packing and evaluate its score.\"\"\"\n    n = eval_inputs[\"n\"]\n    if \"random_seed\" not in eval_inputs:\n        random_seed = 42\n    else:\n        random_seed = eval_inputs[\"random_seed\"]\n    centers, radii, _ = construct_packing(n, random_seed=random_seed)\n    if (\n        centers.shape != (n, 2)\n        or not np.isfinite(centers).all()\n        or not ((radii[:, None] <= centers) & (centers <= 1 - radii[:, None])).all()\n    ):\n        return {\"sum_of_radii\": -np.inf}\n\n    if radii.shape != (n,) or not np.isfinite(radii).all() or not (0 <= radii).all():\n        return {\"sum_of_radii\": -np.inf}\n\n    if _circles_overlap(centers, radii):\n        return {\"sum_of_radii\": -np.inf}\n\n    return {\"sum_of_radii\": float(np.sum(radii))}",
+    "circles": [
+      {
+        "x": 0.42516813695975747,
+        "y": 0.4441204274307718,
+        "r": 0.08572186564973279
+      },
+      {
+        "x": 0.06529381606148721,
+        "y": 0.06529381606148597,
+        "r": 0.06528381606148839
+      },
+      {
+        "x": 0.10283889298082682,
+        "y": 0.8971611070191744,
+        "r": 0.10282889298082695
+      },
+      {
+        "x": 0.8655798711475122,
+        "y": 0.13442012885248844,
+        "r": 0.13441012885248604
+      },
+      {
+        "x": 0.593428198577063,
+        "y": 0.8956505439228963,
+        "r": 0.10433945607710393
+      },
+      {
+        "x": 0.7030734259916475,
+        "y": 0.7451223093685392,
+        "r": 0.08187842728517572
+      },
+      {
+        "x": 0.7390423420295686,
+        "y": 0.46064216566732613,
+        "r": 0.06852591893022776
+      },
+      {
+        "x": 0.2192129876021545,
+        "y": 0.09072157528913442,
+        "r": 0.09071157528913561
+      },
+      {
+        "x": 0.5169245034760128,
+        "y": 0.5583711594004727,
+        "r": 0.060802978421975844
+      },
+      {
+        "x": 0.5337063427481038,
+        "y": 0.7094495816303193,
+        "r": 0.09119465185860177
+      },
+      {
+        "x": 0.6239090819054147,
+        "y": 0.10863259501735577,
+        "r": 0.10862259501735591
+      },
+      {
+        "x": 0.29003013194648797,
+        "y": 0.2891024524090676,
+        "r": 0.11992039661365703
+      },
+      {
+        "x": 0.4124521551476261,
+        "y": 0.10291170574452248,
+        "r": 0.10290170574451854
+      },
+      {
+        "x": 0.3472392968251272,
+        "y": 0.8547813071881624,
+        "r": 0.14520869281183593
+      },
+      {
+        "x": 0.6571443272900843,
+        "y": 0.5874043002674754,
+        "r": 0.08238102360524584
+      },
+      {
+        "x": 0.7024688633628662,
+        "y": 0.2989392238880784,
+        "r": 0.0972514772092841
+      },
+      {
+        "x": 0.14099904262635882,
+        "y": 0.6563378000182158,
+        "r": 0.14098904262635842
+      },
+      {
+        "x": 0.10409536012294766,
+        "y": 0.4140477203840915,
+        "r": 0.10408536012294661
+      },
+      {
+        "x": 0.5915054709055335,
+        "y": 0.4380890496376643,
+        "r": 0.08071478078971145
+      },
+      {
+        "x": 0.3730180153856748,
+        "y": 0.6165458524299788,
+        "r": 0.09440742034318511
+      },
+      {
+        "x": 0.09097567186603114,
+        "y": 0.21942839969046718,
+        "r": 0.09096567186603216
+      },
+      {
+        "x": 0.869056047680275,
+        "y": 0.6119189513521078,
+        "r": 0.1309339523197247
+      },
+      {
+        "x": 0.8714210635222135,
+        "y": 0.8714210635222128,
+        "r": 0.1285689364777881
+      },
+      {
+        "x": 0.5079519926753377,
+        "y": 0.27988674461448526,
+        "r": 0.09818623876603182
+      },
+      {
+        "x": 0.892584315283654,
+        "y": 0.3747334330328868,
+        "r": 0.1074056847163436
+      },
+      {
+        "x": 0.2693122695106523,
+        "y": 0.4827734014843809,
+        "r": 0.07484554181127669
+      }
+    ]
+  },
+  {
+    "candidate_id": "1014377268021464672",
+    "score": -1000000000000.0,
+    "error": "Returned invalid score (-infinity or None)",
+    "code": "# Copyright 2026 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#     http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n# pylint: disable=g-import-not-at-top\n# pylint: disable=g-bad-import-order\n# pylint: disable=pointless-string-statement\nfrom typing import Any, Mapping\n\n# EVOLVE-BLOCK-START\n\"\"\"Constructor-based circle packing for n=26 circles\"\"\"\nimport numpy as np\n\n\ndef construct_packing(n, random_seed: int):\n    \"\"\"Construct a specific arrangement of 26 circles in a unit square.\n\n    The goal is to maximize the sum of their radii.\n\n    Args:\n        n: Number of circles.\n        random_seed: Random seed for reproducibility.\n\n    Returns:\n        Tuple of (centers, radii, sum_of_radii)\n        centers: np.array of shape (26, 2) with (x, y) coordinates\n        radii: np.array of shape (26) with radius of each circle\n        sum_of_radii: Sum of all radii\n    \"\"\"\n    rng = np.random.default_rng(random_seed)\n\n    # Define objective and its gradient\n    def objective(p):\n        return -np.sum(p[2 * n :])\n\n    def objective_grad(p):\n        grad = np.zeros_like(p)\n        grad[2 * n :] = -1.0\n        return grad\n\n    # Define constraint function and its Jacobian\n    def constraints_func(p):\n        c_x = p[0:n]\n        c_y = p[n : 2 * n]\n        r = p[2 * n :]\n\n        b1 = c_x - r\n        b2 = 1.0 - c_x - r\n        b3 = c_y - r\n        b4 = 1.0 - c_y - r\n\n        dx = c_x[:, None] - c_x[None, :]\n        dy = c_y[:, None] - c_y[None, :]\n        dist = np.sqrt(dx**2 + dy**2 + 1e-12)\n        r_sum = r[:, None] + r[None, :]\n        overlap = dist - r_sum\n\n        iu = np.triu_indices(n, k=1)\n        pairwise_constraints = overlap[iu]\n\n        return np.concatenate([b1, b2, b3, b4, pairwise_constraints])\n\n    def constraints_jac(p):\n        c_x = p[0:n]\n        c_y = p[n : 2 * n]\n        r = p[2 * n :]\n\n        M = n * (n - 1) // 2\n        jac = np.zeros((4 * n + M, 3 * n))\n\n        # Boundary constraints derivatives\n        jac[0:n, 0:n] = np.eye(n)\n        jac[0:n, 2 * n :] = -np.eye(n)\n\n        jac[n : 2 * n, 0:n] = -np.eye(n)\n        jac[n : 2 * n, 2 * n :] = -np.eye(n)\n\n        jac[2 * n : 3 * n, n : 2 * n] = np.eye(n)\n        jac[2 * n : 3 * n, 2 * n :] = -np.eye(n)\n\n        jac[3 * n : 4 * n, n : 2 * n] = -np.eye(n)\n        jac[3 * n : 4 * n, 2 * n :] = -np.eye(n)\n\n        # Pairwise constraints derivatives\n        iu1, iu2 = np.triu_indices(n, k=1)\n        dx = c_x[iu1] - c_x[iu2]\n        dy = c_y[iu1] - c_y[iu2]\n        dist = np.sqrt(dx**2 + dy**2 + 1e-12)\n\n        rows = np.arange(4 * n, 4 * n + M)\n        jac[rows, iu1] = dx / dist\n        jac[rows, iu2] = -dx / dist\n        jac[rows, n + iu1] = dy / dist\n        jac[rows, n + iu2] = -dy / dist\n        jac[rows, 2 * n + iu1] = -1.0\n        jac[rows, 2 * n + iu2] = -1.0\n\n        return jac\n\n    # Particle relaxation helper\n    def relax_centers(centers, n_iter=60):\n        for _ in range(n_iter):\n            dx = centers[:, None, 0] - centers[None, :, 0]\n            dy = centers[:, None, 1] - centers[None, :, 1]\n            dist = np.sqrt(dx**2 + dy**2 + 1e-12)\n\n            threshold = 0.18\n            force_mag = np.maximum(0.0, threshold - dist)\n\n            dir_x = dx / dist\n            dir_y = dy / dist\n\n            fx = np.sum(force_mag * dir_x, axis=1)\n            fy = np.sum(force_mag * dir_y, axis=1)\n\n            centers[:, 0] += 0.05 * fx\n            centers[:, 1] += 0.05 * fy\n\n            # Boundary force\n            for i in range(n):\n                x, y = centers[i]\n                if x < 0.05:\n                    centers[i, 0] = 0.05\n                if x > 0.95:\n                    centers[i, 0] = 0.95\n                if y < 0.05:\n                    centers[i, 1] = 0.05\n                if y > 0.95:\n                    centers[i, 1] = 0.95\n        return centers\n\n    # Generate diverse initial configurations\n    initial_states = []\n\n    # 1. 5x5 grid + 1 center\n    grid_x, grid_y = np.meshgrid(np.linspace(0.1, 0.9, 5), np.linspace(0.1, 0.9, 5))\n    grid_points = np.stack([grid_x.ravel(), grid_y.ravel()], axis=1)\n    grid_points = np.vstack([grid_points, [0.5, 0.5]])\n    initial_states.append(grid_points)\n\n    # 2. Hexagonal-like grid\n    hex_points = []\n    for i in range(-5, 6):\n        for j in range(-5, 6):\n            x = i * 0.18 + (j % 2) * 0.09\n            y = j * 0.15\n            if 0.05 <= x + 0.5 <= 0.95 and 0.05 <= y + 0.5 <= 0.95:\n                hex_points.append([x + 0.5, y + 0.5])\n    hex_points = np.array(hex_points)\n    if len(hex_points) >= n:\n        dists = np.sum((hex_points - 0.5) ** 2, axis=1)\n        idx = np.argsort(dists)\n        initial_states.append(hex_points[idx[:n]])\n    else:\n        initial_states.append(rng.uniform(0.1, 0.9, (n, 2)))\n\n    # 3. Fibonacci spiral\n    fib_points = []\n    golden_ratio = (1 + 5**0.5) / 2\n    for i in range(n):\n        t = i / n\n        r_val = np.sqrt(t) * 0.45\n        theta = 2 * np.pi * golden_ratio * i\n        fib_points.append([0.5 + r_val * np.cos(theta), 0.5 + r_val * np.sin(theta)])\n    initial_states.append(np.array(fib_points))\n\n    # 4. Concentric rings\n    ring_points = [[0.5, 0.5]]\n    for i in range(5):\n        angle = 2 * np.pi * i / 5\n        ring_points.append(\n            [0.5 + 0.15 * np.cos(angle), 0.5 + 0.15 * np.sin(angle)]\n        )\n    for i in range(9):\n        angle = 2 * np.pi * i / 9\n        ring_points.append([0.5 + 0.3 * np.cos(angle), 0.5 + 0.3 * np.sin(angle)])\n    for i in range(11):\n        angle = 2 * np.pi * i / 11\n        ring_points.append(\n            [0.5 + 0.43 * np.cos(angle), 0.5 + 0.43 * np.sin(angle)]\n        )\n    ring_points = np.array(ring_points)\n    if len(ring_points) == n:\n        initial_states.append(ring_points)\n\n    # 5. Rest are random configurations\n    for _ in range(40):\n        initial_states.append(rng.uniform(0.1, 0.9, (n, 2)))\n\n    # Run SLSQP optimization on all configurations\n    from scipy.optimize import minimize\n\n    best_val = -1e9\n    best_centers = initial_states[0].copy()\n\n    for init_centers in initial_states:\n        relaxed = relax_centers(init_centers.copy(), n_iter=60)\n        init_radii = np.ones(n) * 0.01\n\n        p0 = np.concatenate([relaxed[:, 0], relaxed[:, 1], init_radii])\n        bounds = [(0.0, 1.0)] * (2 * n) + [(0.0, 0.5)] * n\n\n        res = minimize(\n            objective,\n            p0,\n            method=\"SLSQP\",\n            jac=objective_grad,\n            bounds=bounds,\n            constraints={\n                \"type\": \"ineq\",\n                \"fun\": constraints_func,\n                \"jac\": constraints_jac,\n            },\n            options={\"maxiter\": 80, \"ftol\": 1e-5},\n        )\n\n        if res.success or res.fun < 0:\n            val = -res.fun\n            if val > best_val:\n                best_val = val\n                best_centers = np.stack([res.x[0:n], res.x[n : 2 * n]], axis=1)\n\n    # Final post-processing and clipping\n    best_centers = np.clip(best_centers, 0.001, 0.999)\n\n    # Run the exact linear program to find the absolute mathematically optimal radii\n    radii = compute_max_radii(best_centers, random_seed)\n    sum_radii = np.sum(radii)\n\n    return best_centers, radii, sum_radii\n\n\ndef compute_max_radii(centers, random_seed: int):\n    \"\"\"Compute the maximum possible radii for each circle position.\n\n    Make sure that they don't overlap and stay within the unit square.\n    Uses Linear Programming to find the exact global maximum sum of radii.\n    \"\"\"\n    del random_seed\n    n = centers.shape[0]\n\n    # Objective: minimize -sum(r)\n    c = -np.ones(n)\n\n    # Bounds: 0 <= r_i <= min(x, y, 1-x, 1-y)\n    bounds = []\n    for i in range(n):\n        x, y = centers[i]\n        max_r = min(x, y, 1.0 - x, 1.0 - y)\n        bounds.append((0.0, max(0.0, max_r)))\n\n    # Pairwise constraints: r_i + r_j <= d_ij\n    M = n * (n - 1) // 2\n    A = np.zeros((M, n))\n    b = np.zeros(M)\n\n    idx = 0\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            A[idx, i] = 1.0\n            A[idx, j] = 1.0\n            b[idx] = dist\n            idx += 1\n\n    # Solve LP using modern interior-point/simplex solvers\n    from scipy.optimize import linprog\n\n    for method in [\"highs\", \"interior-point\", \"revised simplex\"]:\n        try:\n            res = linprog(c, A_ub=A, b_ub=b, bounds=bounds, method=method)\n            if res.success:\n                return res.x\n        except Exception:\n            continue\n\n    # Fallback to analytical scaling heuristic if LP solver is not available/fails\n    radii = np.ones(n)\n    for i in range(n):\n        x, y = centers[i]\n        radii[i] = min(x, y, 1.0 - x, 1.0 - y)\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            if radii[i] + radii[j] > dist:\n                scale = dist / (radii[i] + radii[j] + 1e-7)\n                radii[i] *= scale\n                radii[j] *= scale\n    return radii\n\n\n# EVOLVE-BLOCK-END\n\n\ndef _circles_overlap(centers, radii):\n    \"\"\"Protected function to compute max radii.\"\"\"\n    n = centers.shape[0]\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            if radii[i] + radii[j] > dist:\n                return True\n\n    return False\n\n\ndef evaluate(eval_inputs: Mapping[str, Any]) -> dict[str, float]:\n    \"\"\"Construct a packing and evaluate its score.\"\"\"\n    n = eval_inputs[\"n\"]\n    if \"random_seed\" not in eval_inputs:\n        random_seed = 42\n    else:\n        random_seed = eval_inputs[\"random_seed\"]\n    centers, radii, _ = construct_packing(n, random_seed=random_seed)\n    if (\n        centers.shape != (n, 2)\n        or not np.isfinite(centers).all()\n        or not ((radii[:, None] <= centers) & (centers <= 1 - radii[:, None])).all()\n    ):\n        return {\"sum_of_radii\": -np.inf}\n\n    if radii.shape != (n,) or not np.isfinite(radii).all() or not (0 <= radii).all():\n        return {\"sum_of_radii\": -np.inf}\n\n    if _circles_overlap(centers, radii):\n        return {\"sum_of_radii\": -np.inf}\n\n    return {\"sum_of_radii\": float(np.sum(radii))}",
+    "circles": []
+  },
+  {
+    "candidate_id": "1014377268021461670",
+    "score": 2.1189655894501107,
+    "error": "",
+    "code": "# Copyright 2026 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#     http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n# pylint: disable=g-import-not-at-top\n# pylint: disable=g-bad-import-order\n# pylint: disable=pointless-string-statement\nfrom typing import Any, Mapping\n\n# EVOLVE-BLOCK-START\n\"\"\"Constructor-based circle packing for n=26 circles\"\"\"\nimport numpy as np\n\n\ndef construct_packing(n, random_seed: int):\n    \"\"\"Construct a specific arrangement of 26 circles in a unit square.\n\n    The goal is to maximize the sum of their radii.\n\n    Args:\n        n: Number of circles.\n        random_seed: Random seed for reproducibility.\n\n    Returns:\n        Tuple of (centers, radii, sum_of_radii)\n        centers: np.array of shape (26, 2) with (x, y) coordinates\n        radii: np.array of shape (26) with radius of each circle\n        sum_of_radii: Sum of all radii\n    \"\"\"\n\n    rng = np.random.default_rng(random_seed)\n    \n    best_centers = None\n    best_radii = None\n    best_sum = -1\n    \n    # CRAZY IDEA: Multiverse Bubble Inflation with Simulated Annealing!\n    # We simulate multiple parallel universes of expanding hyperspheres.\n    # Why? Because equal-sized circles mathematically optimize the sum of radii!\n    for run in range(5):\n        centers = rng.uniform(0.1, 0.9, (n, 2))\n        R = 0.05  # Initial bubble radius\n        lr = 0.15\n        \n        # Physics engine: Concurrent inflating bubbles with repulsion\n        for step in range(2500):\n            # Compute pairwise Euclidean distances\n            diff = centers[:, np.newaxis, :] - centers[np.newaxis, :, :]\n            dist = np.sqrt(np.sum(diff**2, axis=-1))\n            np.fill_diagonal(dist, np.inf)\n            \n            # Electrostatic-like bubble overlap repulsion\n            overlap = 2 * R - dist\n            overlap[overlap < 0] = 0\n            \n            # Calculate repulsive forces (pushing overlapping bubbles apart)\n            direction = diff / (dist[:, :, np.newaxis] + 1e-8)\n            force = np.sum(direction * overlap[:, :, np.newaxis], axis=1)\n            \n            # Quantum-like boundary potentials (hard walls at R and 1-R)\n            viol_left = R - centers[:, 0]\n            viol_right = centers[:, 0] - (1 - R)\n            viol_bottom = R - centers[:, 1]\n            viol_top = centers[:, 1] - (1 - R)\n            \n            force[:, 0] += np.maximum(viol_left, 0) - np.maximum(viol_right, 0)\n            force[:, 1] += np.maximum(viol_bottom, 0) - np.maximum(viol_top, 0)\n            \n            # Simulated annealing: inject thermal noise to jiggle into perfect Wigner crystals\n            temp = 0.005 * (1.0 - step / 2500.0)**2\n            force += rng.normal(0, temp, (n, 2))\n            \n            centers += force * lr\n            centers = np.clip(centers, 0.0, 1.0)\n            \n            # Adaptively inflate/deflate the universe!\n            max_overlap = np.max(overlap)\n            max_viol = max(np.max(viol_left), np.max(viol_right), np.max(viol_bottom), np.max(viol_top))\n            \n            if max_overlap < 1e-5 and max_viol < 1e-5:\n                R += 0.001  # Universe expands\n            else:\n                R -= 0.0002 # Gravity wins, shrink\n            R = max(0.001, R)\n            \n        # CRAZY IDEA PART 2: Once we have the perfect crystalline lattice, \n        # we decouple the exact boundaries and formulate the final radii maximizing\n        # step as an exact Linear Programming problem! (handled in compute_max_radii)\n        radii = compute_max_radii(centers, random_seed)\n        sum_radii = np.sum(radii)\n        \n        if sum_radii > best_sum:\n            best_sum = sum_radii\n            best_centers = centers.copy()\n            best_radii = radii\n\n    return best_centers, best_radii, best_sum\n\n\ndef compute_max_radii(centers, random_seed: int):\n    \"\"\"Compute the maximum possible radii for each circle position\n    by solving a Linear Programming problem for optimal bounds!\n\n    Args:\n        centers: np.array of shape (n, 2) with (x, y) coordinates\n        random_seed: Random seed for reproducibility.\n\n    Returns:\n        np.array of shape (n) with radius of each circle\n    \"\"\"\n    del random_seed  # Unused.\n    from scipy.optimize import linprog\n    n = centers.shape[0]\n    \n    # Objective: maximize sum of radii -> minimize -sum(radii)\n    c = -np.ones(n)\n    \n    A_ub = []\n    b_ub = []\n    \n    # 1. Quantum hard-wall constraints: r_i <= distance to all 4 edges\n    for i in range(n):\n        x, y = centers[i]\n        for val in [x, 1 - x, y, 1 - y]:\n            row = np.zeros(n)\n            row[i] = 1\n            A_ub.append(row)\n            b_ub.append(val)\n            \n    # 2. Relativity pairwise constraints: r_i + r_j <= euclidean distance\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt((centers[i, 0] - centers[j, 0])**2 + (centers[i, 1] - centers[j, 1])**2)\n            row = np.zeros(n)\n            row[i] = 1\n            row[j] = 1\n            A_ub.append(row)\n            b_ub.append(dist)\n            \n    # Unleash the Simplex/Interior-Point beast on the exact geometry\n    res = linprog(c, A_ub=np.array(A_ub), b_ub=np.array(b_ub), bounds=(0, None))\n    \n    # Fallback to greedy scaling if LP fails (extremely rare for feasible geometries)\n    if not res.success:\n        radii = np.ones(n)\n        for i in range(n):\n            radii[i] = min(centers[i,0], centers[i,1], 1-centers[i,0], 1-centers[i,1])\n        for i in range(n):\n            for j in range(i + 1, n):\n                dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n                if radii[i] + radii[j] > dist:\n                    scale = dist / (radii[i] + radii[j] + 1e-7)\n                    radii[i] *= scale\n                    radii[j] *= scale\n        return radii\n        \n    return res.x\n\n\n# EVOLVE-BLOCK-END\n\n\ndef _circles_overlap(centers, radii):\n    \"\"\"Protected function to compute max radii.\"\"\"\n    n = centers.shape[0]\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            if radii[i] + radii[j] > dist:\n                return True\n\n    return False\n\n\ndef evaluate(eval_inputs: Mapping[str, Any]) -> dict[str, float]:\n    \"\"\"Construct a packing and evaluate its score.\"\"\"\n    n = eval_inputs[\"n\"]\n    if \"random_seed\" not in eval_inputs:\n        random_seed = 42\n    else:\n        random_seed = eval_inputs[\"random_seed\"]\n    centers, radii, _ = construct_packing(n, random_seed=random_seed)\n    if (\n        centers.shape != (n, 2)\n        or not np.isfinite(centers).all()\n        or not ((radii[:, None] <= centers) & (centers <= 1 - radii[:, None])).all()\n    ):\n        return {\"sum_of_radii\": -np.inf}\n\n    if radii.shape != (n,) or not np.isfinite(radii).all() or not (0 <= radii).all():\n        return {\"sum_of_radii\": -np.inf}\n\n    if _circles_overlap(centers, radii):\n        return {\"sum_of_radii\": -np.inf}\n\n    return {\"sum_of_radii\": float(np.sum(radii))}",
+    "circles": [
+      {
+        "x": 0.28060453164427485,
+        "y": 0.756049166140022,
+        "r": 0.05239911091496799
+      },
+      {
+        "x": 0.07695806694439197,
+        "y": 0.18275032108898293,
+        "r": 0.07695806694439197
+      },
+      {
+        "x": 0.18669285726699772,
+        "y": 0.8795245333826643,
+        "r": 0.10273170130507137
+      },
+      {
+        "x": 0.637389534512919,
+        "y": 0.7994486358523062,
+        "r": 0.10658379615353097
+      },
+      {
+        "x": 0.18318631663952772,
+        "y": 0.4645952352305608,
+        "r": 0.07663343604782566
+      },
+      {
+        "x": 0.7765727287878116,
+        "y": 0.5725664699789986,
+        "r": 0.07767884430920767
+      },
+      {
+        "x": 0.5367318631009808,
+        "y": 0.9225745798199536,
+        "r": 0.05245068090096808
+      },
+      {
+        "x": 0.4859928743492219,
+        "y": 0.3519281633396313,
+        "r": 0.07773969677758256
+      },
+      {
+        "x": 0.22953343042314459,
+        "y": 0.20656942501088046,
+        "r": 0.07566526239373755
+      },
+      {
+        "x": 0.8324571553064765,
+        "y": 0.19940177018643473,
+        "r": 0.15109614672568178
+      },
+      {
+        "x": 0.7584479157334028,
+        "y": 0.418370738081997,
+        "r": 0.07757846657665458
+      },
+      {
+        "x": 0.09553908609275946,
+        "y": 0.5930315820993245,
+        "r": 0.07885911110319294
+      },
+      {
+        "x": 0.35518928726034543,
+        "y": 0.4891359926137394,
+        "r": 0.07618268234613862
+      },
+      {
+        "x": 0.922579268207693,
+        "y": 0.6797260543146055,
+        "r": 0.052535423630494626
+      },
+      {
+        "x": 0.9013588188653177,
+        "y": 0.47963423824268925,
+        "r": 0.0779102554771288
+      },
+      {
+        "x": 0.6381527417885077,
+        "y": 0.3201941027452502,
+        "r": 0.07769413435627605
+      },
+      {
+        "x": 0.3142074144557627,
+        "y": 0.07716204203405999,
+        "r": 0.07716204203405999
+      },
+      {
+        "x": 0.7750624246868097,
+        "y": 0.7278136585870064,
+        "r": 0.04861090303633245
+      },
+      {
+        "x": 0.5872528618861493,
+        "y": 0.1417343419212028,
+        "r": 0.10079803302940415
+      },
+      {
+        "x": 0.25074295445336214,
+        "y": 0.6040543923360899,
+        "r": 0.0767356931147212
+      },
+      {
+        "x": 0.8874760758481495,
+        "y": 0.8351989916870417,
+        "r": 0.10685111397241767
+      },
+      {
+        "x": 0.38435645678986163,
+        "y": 0.21727139857184224,
+        "r": 0.07952720434176055
+      },
+      {
+        "x": 0.4032794204645094,
+        "y": 0.6365749754583335,
+        "r": 0.07890089052295265
+      },
+      {
+        "x": 0.09479276852946646,
+        "y": 0.3371485380927715,
+        "r": 0.07846678948011193
+      },
+      {
+        "x": 0.42313750418647644,
+        "y": 0.8170090865028187,
+        "r": 0.1026226944943179
+      },
+      {
+        "x": 0.28771745974167967,
+        "y": 0.34984065498020905,
+        "r": 0.0785934094611809
+      }
+    ]
+  },
+  {
+    "candidate_id": "1014377268021461436",
+    "score": 2.6302821454619236,
+    "error": "",
+    "code": "# Copyright 2026 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#     http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n# pylint: disable=g-import-not-at-top\n# pylint: disable=g-bad-import-order\n# pylint: disable=pointless-string-statement\nfrom typing import Any, Mapping\n\n# EVOLVE-BLOCK-START\n\"\"\"Constructor-based circle packing for n=26 circles\"\"\"\nimport numpy as np\n\n\nimport scipy.optimize as opt\n\ndef construct_packing(n, random_seed: int):\n    \"\"\"Construct a specific arrangement of circles in a unit square.\n\n    The goal is to maximize the sum of their radii using mathematical optimization.\n\n    Args:\n        n: Number of circles.\n        random_seed: Random seed for reproducibility.\n\n    Returns:\n        Tuple of (centers, radii, sum_of_radii)\n    \"\"\"\n    rng = np.random.default_rng(random_seed)\n\n    def objective(vars):\n        # vars is [x_0, y_0, x_1, y_1, ..., r_0, r_1, ...]\n        return -np.sum(vars[2 * n:])\n        \n    def constraints(vars):\n        centers = vars[:2 * n].reshape((n, 2))\n        radii = vars[2 * n:]\n        \n        cons = []\n        # Subtracting 1e-5 to strictly prevent boundary overlaps due to numeric tolerances\n        cons.extend(centers[:, 0] - radii - 1e-5)\n        cons.extend(1 - centers[:, 0] - radii - 1e-5)\n        cons.extend(centers[:, 1] - radii - 1e-5)\n        cons.extend(1 - centers[:, 1] - radii - 1e-5)\n        \n        # Vectorized pairwise constraints\n        diffs = centers[:, np.newaxis, :] - centers[np.newaxis, :, :]\n        dist_sq = np.sum(diffs ** 2, axis=-1)\n        rad_sums = radii[:, np.newaxis] + radii[np.newaxis, :]\n        \n        # Extract upper triangle for unique pairs\n        idx = np.triu_indices(n, k=1)\n        cons.extend(dist_sq[idx] - (rad_sums[idx] + 1e-5) ** 2)\n                \n        return np.array(cons)\n\n    bounds = [(0, 1)] * (3 * n)\n    best_res = None\n    best_val = np.inf\n    best_res_fallback = None\n    best_val_fallback = np.inf\n    \n    # \ud83d\udec1 CRAZY IDEA: The \"Expanding Bubble Bath\" Multiverse! \ud83d\udec1\n    # We simulate a bubble bath with different target radius distributions.\n    # Bubbles grow over time and repel each other via vectorized forces.\n    # This provides SLSQP with extremely dense, already-feasible packings to optimize!\n    multiverse_x0 = []\n    \n    def bubble_bath(rng_seed, distribution):\n        local_rng = np.random.default_rng(rng_seed)\n        centers = local_rng.uniform(0.2, 0.8, (n, 2))\n        \n        if distribution == 'uniform':\n            target_r = np.ones(n) * (0.6 / np.sqrt(n))\n        elif distribution == 'bimodal':\n            target_r = np.concatenate([\n                local_rng.uniform(0.15, 0.25, n // 4),\n                local_rng.uniform(0.02, 0.08, n - n // 4)\n            ])\n        elif distribution == 'power':\n            target_r = local_rng.beta(1, 3, n) * 0.25 + 0.02\n        else: # exponential\n            target_r = local_rng.exponential(0.08, n) + 0.01\n            \n        target_r = np.clip(target_r, 0.01, 0.3)\n        radii = np.zeros(n)\n        \n        # Vectorized physics relaxation loop\n        for step in range(300):\n            # Grow bubbles\n            radii += (target_r - radii) * 0.05\n            \n            # Repulsion (multiple sub-steps for stability)\n            for _ in range(4):\n                # Wall repulsion\n                centers = np.clip(centers, radii[:, None] + 1e-4, 1 - radii[:, None] - 1e-4)\n                \n                # Pairwise repulsion\n                diffs = centers[:, np.newaxis, :] - centers[np.newaxis, :, :]\n                dist = np.linalg.norm(diffs, axis=-1)\n                np.fill_diagonal(dist, np.inf)\n                \n                rad_sums = radii[:, np.newaxis] + radii[np.newaxis, :]\n                overlap = rad_sums - dist\n                \n                if np.max(overlap) > 0:\n                    push_dirs = diffs / (dist[..., np.newaxis] + 1e-9)\n                    push_mags = np.maximum(overlap, 0) * 0.25\n                    centers += np.sum(push_dirs * push_mags[..., np.newaxis], axis=1)\n                                \n        x0 = np.zeros(3 * n)\n        x0[:2 * n] = centers.flatten()\n        x0[2 * n:] = radii\n        return x0\n\n    # Universe 0: Classic grid as a fallback\n    x0_0 = np.zeros(3 * n)\n    grid_size = int(np.ceil(np.sqrt(n)))\n    for i in range(n):\n        x0_0[2 * i] = (i % grid_size + 0.5) / grid_size + rng.uniform(-0.01, 0.01)\n        x0_0[2 * i + 1] = (i // grid_size + 0.5) / grid_size + rng.uniform(-0.01, 0.01)\n    x0_0[2 * n:] = 0.4 / grid_size\n    multiverse_x0.append(x0_0)\n\n    # Generate 15 different bubble baths\n    distributions = ['uniform', 'bimodal', 'power', 'exponential']\n    for idx in range(15):\n        dist = distributions[idx % len(distributions)]\n        multiverse_x0.append(bubble_bath(random_seed + idx, dist))\n\n    # Evolve the multiverse!\n    for x0_universe in multiverse_x0:\n        res = opt.minimize(\n            objective, x0_universe, bounds=bounds,\n            constraints={'type': 'ineq', 'fun': constraints},\n            options={'maxiter': 800, 'ftol': 1e-6}\n        )\n        \n        # Determine if this universe reached a valid physical state\n        cons_vals = constraints(res.x)\n        max_viol = -np.min(np.append(cons_vals, 0.0))\n        \n        # We accept if violations are within small numeric tolerance\n        if max_viol < 1e-3 and res.fun < best_val:\n            best_val = res.fun\n            best_res = res.x\n            \n        # Track the absolute best objective as a fallback\n        if res.fun < best_val_fallback:\n            best_val_fallback = res.fun\n            best_res_fallback = res.x\n            \n    # Collapse the wavefunction to the best surviving timeline\n    if best_res is None:\n        best_res = best_res_fallback\n\n    centers = best_res[:2 * n].reshape((n, 2))\n    radii = best_res[2 * n:]\n    return centers, radii, np.sum(radii)\n\n\n# EVOLVE-BLOCK-END\n\n\ndef _circles_overlap(centers, radii):\n    \"\"\"Protected function to compute max radii.\"\"\"\n    n = centers.shape[0]\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            if radii[i] + radii[j] > dist:\n                return True\n\n    return False\n\n\ndef evaluate(eval_inputs: Mapping[str, Any]) -> dict[str, float]:\n    \"\"\"Construct a packing and evaluate its score.\"\"\"\n    n = eval_inputs[\"n\"]\n    if \"random_seed\" not in eval_inputs:\n        random_seed = 42\n    else:\n        random_seed = eval_inputs[\"random_seed\"]\n    centers, radii, _ = construct_packing(n, random_seed=random_seed)\n    if (\n        centers.shape != (n, 2)\n        or not np.isfinite(centers).all()\n        or not ((radii[:, None] <= centers) & (centers <= 1 - radii[:, None])).all()\n    ):\n        return {\"sum_of_radii\": -np.inf}\n\n    if radii.shape != (n,) or not np.isfinite(radii).all() or not (0 <= radii).all():\n        return {\"sum_of_radii\": -np.inf}\n\n    if _circles_overlap(centers, radii):\n        return {\"sum_of_radii\": -np.inf}\n\n    return {\"sum_of_radii\": float(np.sum(radii))}",
+    "circles": [
+      {
+        "x": 0.9148628008546651,
+        "y": 0.9148628008547075,
+        "r": 0.08512719914550476
+      },
+      {
+        "x": 0.26950677312208665,
+        "y": 0.8972576433200965,
+        "r": 0.1027323566800794
+      },
+      {
+        "x": 0.4748321752500414,
+        "y": 0.8974069006377063,
+        "r": 0.1025830993625531
+      },
+      {
+        "x": 0.28970396512983027,
+        "y": 0.4961253898990644,
+        "r": 0.12775653957854857
+      },
+      {
+        "x": 0.3657112735918394,
+        "y": 0.2780742599956401,
+        "r": 0.10315207469421298
+      },
+      {
+        "x": 0.8703007695979773,
+        "y": 0.48478839340223895,
+        "r": 0.1296892304021623
+      },
+      {
+        "x": 0.2649190133735727,
+        "y": 0.10078530296934612,
+        "r": 0.10077530296945901
+      },
+      {
+        "x": 0.08386582965551062,
+        "y": 0.9161341703443973,
+        "r": 0.08385582965569623
+      },
+      {
+        "x": 0.7050991713297233,
+        "y": 0.8707819742471443,
+        "r": 0.12920802575299115
+      },
+      {
+        "x": 0.08097500214144047,
+        "y": 0.49716299330006025,
+        "r": 0.08096500214154843
+      },
+      {
+        "x": 0.47661922128882533,
+        "y": 0.4175144004858481,
+        "r": 0.07500673772532539
+      },
+      {
+        "x": 0.6701135285858058,
+        "y": 0.10288672435038952,
+        "r": 0.10287672435066338
+      },
+      {
+        "x": 0.08252762233800905,
+        "y": 0.08252762233803852,
+        "r": 0.08251762233819979
+      },
+      {
+        "x": 0.5644912845811975,
+        "y": 0.27110259373035944,
+        "r": 0.09574015478455483
+      },
+      {
+        "x": 0.6969458434899451,
+        "y": 0.6392324413695548,
+        "r": 0.1024750286868464
+      },
+      {
+        "x": 0.759152196747431,
+        "y": 0.2844911175168443,
+        "r": 0.09937063650449286
+      },
+      {
+        "x": 0.5511822709007069,
+        "y": 0.7383868466069995,
+        "r": 0.07380619912686519
+      },
+      {
+        "x": 0.46647102570324805,
+        "y": 0.10077670954590222,
+        "r": 0.10076670954608655
+      },
+      {
+        "x": 0.13313417970372501,
+        "y": 0.7048114459229484,
+        "r": 0.13312417970386387
+      },
+      {
+        "x": 0.3724538606623722,
+        "y": 0.7151948090654292,
+        "r": 0.10641064459308323
+      },
+      {
+        "x": 0.8911876295288468,
+        "y": 0.7223737746627996,
+        "r": 0.10880237047123358
+      },
+      {
+        "x": 0.13145310642890404,
+        "y": 0.29082973412456825,
+        "r": 0.13144310642906318
+      },
+      {
+        "x": 0.9291529443590468,
+        "y": 0.2930823070296902,
+        "r": 0.07083705564110553
+      },
+      {
+        "x": 0.5139654883578607,
+        "y": 0.5785518463308386,
+        "r": 0.09029448309374452
+      },
+      {
+        "x": 0.6466283404522895,
+        "y": 0.44584900381729103,
+        "r": 0.09733739909564866
+      },
+      {
+        "x": 0.8863615670117809,
+        "y": 0.11363843298824224,
+        "r": 0.1136284329883911
+      }
+    ]
+  },
+  {
+    "candidate_id": "1014377268021464115",
+    "score": 2.3856099812717035,
+    "error": "",
+    "code": "# Copyright 2026 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#     http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n# pylint: disable=g-import-not-at-top\n# pylint: disable=g-bad-import-order\n# pylint: disable=pointless-string-statement\nfrom typing import Any, Mapping\n\n# EVOLVE-BLOCK-START\n\"\"\"Constructor-based circle packing for n=26 circles\"\"\"\nimport numpy as np\nfrom scipy.optimize import linprog, minimize\n\n\ndef construct_packing(n, random_seed: int):\n    \"\"\"Construct a specific arrangement of 26 circles in a unit square.\n\n    The goal is to maximize the sum of their radii.\n\n    Args:\n        n: Number of circles.\n        random_seed: Random seed for reproducibility.\n\n    Returns:\n        Tuple of (centers, radii, sum_of_radii)\n        centers: np.array of shape (26, 2) with (x, y) coordinates\n        radii: np.array of shape (26) with radius of each circle\n        sum_of_radii: Sum of all radii\n    \"\"\"\n    rng = np.random.default_rng(random_seed)\n\n    def make_fibonacci_spiral(n, rng):\n        centers = np.zeros((n, 2))\n        golden_ratio = (1 + 5**0.5) / 2\n        for i in range(n):\n            theta = 2 * np.pi * i * golden_ratio\n            r = np.sqrt(i / (n - 1)) * 0.42\n            centers[i] = [0.5 + r * np.cos(theta), 0.5 + r * np.sin(theta)]\n        return centers\n\n    def make_concentric_rings(n, rng):\n        centers = np.zeros((n, 2))\n        centers[0] = [0.5, 0.5]\n        for i in range(8):\n            angle = 2 * np.pi * i / 8 + rng.uniform(-0.1, 0.1)\n            centers[i + 1] = [0.5 + 0.22 * np.cos(angle), 0.5 + 0.22 * np.sin(angle)]\n        for i in range(17):\n            angle = 2 * np.pi * i / 17 + rng.uniform(-0.1, 0.1)\n            centers[i + 9] = [0.5 + 0.41 * np.cos(angle), 0.5 + 0.41 * np.sin(angle)]\n        return centers\n\n    def make_hexagonal_grid_with_scale(n, scale, rng):\n        points = []\n        for r in range(12):\n            for c in range(12):\n                x = (c + 0.5 * (r % 2)) * 0.12 * scale\n                y = r * (np.sqrt(3) / 2) * 0.12 * scale\n                x += (1.0 - 11 * 0.12 * scale) / 2\n                y += (1.0 - 11 * (np.sqrt(3) / 2) * 0.12 * scale) / 2\n                if 0.02 < x < 0.98 and 0.02 < y < 0.98:\n                    points.append([x, y])\n        points = np.array(points)\n        if len(points) < n:\n            return rng.uniform(0.05, 0.95, (n, 2))\n        dists = np.sum((points - 0.5) ** 2, axis=1)\n        idx = np.argsort(dists)\n        return points[idx[:n]]\n\n    def make_grid_with_jitter(n, rng):\n        points = []\n        for x in np.linspace(0.1, 0.9, 6):\n            for y in np.linspace(0.1, 0.9, 5):\n                points.append([x + rng.uniform(-0.02, 0.02), y + rng.uniform(-0.02, 0.02)])\n        points = np.array(points)\n        rng.shuffle(points)\n        return points[:n]\n\n    def relax_centers(centers, steps=150, lr=0.008):\n        pos = centers.copy()\n        vel = np.zeros_like(pos)\n        for _ in range(steps):\n            forces = np.zeros_like(pos)\n            for i in range(n):\n                for j in range(i + 1, n):\n                    diff = pos[i] - pos[j]\n                    dist = np.linalg.norm(diff) + 1e-5\n                    if dist < 0.35:\n                        f_val = 1.0 / (dist**3)\n                        force = (diff / dist) * f_val\n                        forces[i] += force\n                        forces[j] -= force\n\n            for i in range(n):\n                forces[i, 0] += 1.0 / (pos[i, 0] ** 3)\n                forces[i, 0] -= 1.0 / ((1.0 - pos[i, 0]) ** 3)\n                forces[i, 1] += 1.0 / (pos[i, 1] ** 3)\n                forces[i, 1] -= 1.0 / ((1.0 - pos[i, 1]) ** 3)\n\n            vel = vel * 0.85 + forces * lr\n            step_len = np.linalg.norm(vel, axis=1, keepdims=True)\n            max_step = 0.04\n            vel = np.where(step_len > max_step, vel / step_len * max_step, vel)\n            pos += vel\n            pos = np.clip(pos, 0.002, 0.998)\n        return pos\n\n    candidates = []\n    candidates.append(make_fibonacci_spiral(n, rng))\n    candidates.append(make_concentric_rings(n, rng))\n    for scale in [0.75, 0.85, 0.95]:\n        candidates.append(make_hexagonal_grid_with_scale(n, scale, rng))\n    for _ in range(3):\n        candidates.append(make_grid_with_jitter(n, rng))\n    for _ in range(2):\n        candidates.append(rng.uniform(0.1, 0.9, (n, 2)))\n\n    best_centers = None\n    best_sum_radii = -1.0\n\n    def fast_eval(centers):\n        radii = np.zeros(n)\n        for i in range(n):\n            x, y = centers[i]\n            radii[i] = min(x, y, 1.0 - x, 1.0 - y)\n        for _ in range(12):\n            for i in range(n):\n                for j in range(i + 1, n):\n                    dist = np.sqrt((centers[i, 0] - centers[j, 0]) ** 2 + (centers[i, 1] - centers[j, 1]) ** 2)\n                    if radii[i] + radii[j] > dist:\n                        tot = radii[i] + radii[j]\n                        if tot > 0:\n                            scale = dist / tot\n                            radii[i] *= scale\n                            radii[j] *= scale\n        return np.sum(radii)\n\n    relaxed_candidates = []\n    for c in candidates:\n        relaxed = relax_centers(c)\n        score = fast_eval(relaxed)\n        relaxed_candidates.append((score, relaxed))\n\n    relaxed_candidates.sort(key=lambda x: x[0], reverse=True)\n    top_candidates = [x[1] for x in relaxed_candidates[:3]]\n\n    def obj(flat_centers):\n        centers = np.clip(flat_centers.reshape((n, 2)), 0.001, 0.999)\n        return -fast_eval(centers)\n\n    for tc in top_candidates:\n        x0 = tc.flatten()\n        bounds = [(0.001, 0.999)] * (2 * n)\n        res = minimize(obj, x0, method=\"L-BFGS-B\", bounds=bounds, options={'maxiter': 60})\n        opt_centers = np.clip(res.x.reshape((n, 2)), 0.001, 0.999)\n        exact_radii = compute_max_radii(opt_centers, random_seed)\n        score = np.sum(exact_radii)\n\n        if score > best_sum_radii:\n            best_sum_radii = score\n            best_centers = opt_centers\n\n    radii = compute_max_radii(best_centers, random_seed)\n    sum_radii = np.sum(radii)\n\n    return best_centers, radii, sum_radii\n\n\ndef compute_max_radii(centers, random_seed: int):\n    \"\"\"Compute the maximum possible radii for each circle position.\n\n    Make sure that they don't overlap and stay within the unit square.\n\n    Args:\n        centers: np.array of shape (n, 2) with (x, y) coordinates\n        random_seed: Random seed for reproducibility.\n\n    Returns:\n        np.array of shape (n) with radius of each circle\n    \"\"\"\n    del random_seed\n    n = centers.shape[0]\n    c = -np.ones(n)\n\n    bounds = []\n    for i in range(n):\n        x, y = centers[i]\n        max_r = min(x, y, 1.0 - x, 1.0 - y)\n        bounds.append((0.0, max(0.0, max_r)))\n\n    num_pairs = n * (n - 1) // 2\n    A_ub = np.zeros((num_pairs, n))\n    b_ub = np.zeros(num_pairs)\n\n    idx = 0\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            A_ub[idx, i] = 1.0\n            A_ub[idx, j] = 1.0\n            b_ub[idx] = dist\n            idx += 1\n\n    try:\n        res = linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=bounds, method='highs')\n        if res.success:\n            return res.x\n    except Exception:\n        pass\n\n    radii = np.zeros(n)\n    for i in range(n):\n        x, y = centers[i]\n        radii[i] = min(x, y, 1.0 - x, 1.0 - y)\n    for _ in range(50):\n        for i in range(n):\n            for j in range(i + 1, n):\n                dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n                if radii[i] + radii[j] > dist:\n                    tot = radii[i] + radii[j]\n                    if tot > 0:\n                        scale = dist / tot\n                        radii[i] *= scale\n                        radii[j] *= scale\n    return radii\n\n\n# EVOLVE-BLOCK-END\n\n\ndef _circles_overlap(centers, radii):\n    \"\"\"Protected function to compute max radii.\"\"\"\n    n = centers.shape[0]\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            if radii[i] + radii[j] > dist:\n                return True\n\n    return False\n\n\ndef evaluate(eval_inputs: Mapping[str, Any]) -> dict[str, float]:\n    \"\"\"Construct a packing and evaluate its score.\"\"\"\n    n = eval_inputs[\"n\"]\n    if \"random_seed\" not in eval_inputs:\n        random_seed = 42\n    else:\n        random_seed = eval_inputs[\"random_seed\"]\n    centers, radii, _ = construct_packing(n, random_seed=random_seed)\n    if (\n        centers.shape != (n, 2)\n        or not np.isfinite(centers).all()\n        or not ((radii[:, None] <= centers) & (centers <= 1 - radii[:, None])).all()\n    ):\n        return {\"sum_of_radii\": -np.inf}\n\n    if radii.shape != (n,) or not np.isfinite(radii).all() or not (0 <= radii).all():\n        return {\"sum_of_radii\": -np.inf}\n\n    if _circles_overlap(centers, radii):\n        return {\"sum_of_radii\": -np.inf}\n\n    return {\"sum_of_radii\": float(np.sum(radii))}",
+    "circles": [
+      {
+        "x": 0.5398071262052708,
+        "y": 0.513670557594988,
+        "r": 0.05195280852572012
+      },
+      {
+        "x": 0.3549470132038324,
+        "y": 0.4710937649986628,
+        "r": 0.06761425371326585
+      },
+      {
+        "x": 0.5781287290182184,
+        "y": 0.739069273420193,
+        "r": 0.09282344289952724
+      },
+      {
+        "x": 0.7260596063764572,
+        "y": 0.238604107409411,
+        "r": 0.06437388796744524
+      },
+      {
+        "x": 0.2261648765981053,
+        "y": 0.5544633697106709,
+        "r": 0.05329517890612649
+      },
+      {
+        "x": 0.7044861521696402,
+        "y": 0.5938534672214772,
+        "r": 0.09217555992782311
+      },
+      {
+        "x": 0.5285429138736241,
+        "y": 0.3263983552448472,
+        "r": 0.13565785282518633
+      },
+      {
+        "x": 0.45289887763177794,
+        "y": 0.5780452519773938,
+        "r": 0.05620053144554553
+      },
+      {
+        "x": 0.7040173232387131,
+        "y": 0.4015686609682286,
+        "r": 0.05523961495417809
+      },
+      {
+        "x": 0.30391917973818217,
+        "y": 0.3230350458251238,
+        "r": 0.08899105945173186
+      },
+      {
+        "x": 0.725004769672783,
+        "y": 0.8897035628330343,
+        "r": 0.11029643716696569
+      },
+      {
+        "x": 0.6222993848918289,
+        "y": 0.10488237950100056,
+        "r": 0.10488237950100056
+      },
+      {
+        "x": 0.28704970248862977,
+        "y": 0.6920663700828268,
+        "r": 0.09717590713746864
+      },
+      {
+        "x": 0.8791121545813784,
+        "y": 0.7159262896657831,
+        "r": 0.12088784541862163
+      },
+      {
+        "x": 0.19402716496051092,
+        "y": 0.10707185708704456,
+        "r": 0.10707185708704456
+      },
+      {
+        "x": 0.3331301121642134,
+        "y": 0.891983637511087,
+        "r": 0.10798334313375878
+      },
+      {
+        "x": 0.9144186573542514,
+        "y": 0.30977324166240094,
+        "r": 0.08558134264574857
+      },
+      {
+        "x": 0.10415389639043607,
+        "y": 0.4543300943161873,
+        "r": 0.10415389639043607
+      },
+      {
+        "x": 0.9165117098702158,
+        "y": 0.9166275741714452,
+        "r": 0.08309386902839139
+      },
+      {
+        "x": 0.41067563903369814,
+        "y": 0.10668861687592603,
+        "r": 0.10668861687592603
+      },
+      {
+        "x": 0.11342922725372222,
+        "y": 0.8645055099340787,
+        "r": 0.11342922725372222
+      },
+      {
+        "x": 0.899184857362972,
+        "y": 0.4953318038036051,
+        "r": 0.10060149395871781
+      },
+      {
+        "x": 0.0851821564061307,
+        "y": 0.2657277337050396,
+        "r": 0.0851821564061307
+      },
+      {
+        "x": 0.5277880664431546,
+        "y": 0.9123645172557284,
+        "r": 0.08763548274427158
+      },
+      {
+        "x": 0.8584980802624907,
+        "y": 0.11601230840448729,
+        "r": 0.11601230840448729
+      },
+      {
+        "x": 0.09673229515165963,
+        "y": 0.654956394588477,
+        "r": 0.09660962750246224
+      }
+    ]
+  },
+  {
+    "candidate_id": "1014377268021464372",
+    "score": 2.630438340259675,
+    "error": "",
+    "code": "# Copyright 2026 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#     http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n# pylint: disable=g-import-not-at-top\n# pylint: disable=g-bad-import-order\n# pylint: disable=pointless-string-statement\nfrom typing import Any, Mapping\n\n# EVOLVE-BLOCK-START\n\"\"\"Constructor-based circle packing for n=26 circles\"\"\"\nimport numpy as np\n\n\nimport scipy.optimize as opt\n\ndef construct_packing(n, random_seed: int):\n    \"\"\"Construct a specific arrangement of circles in a unit square.\n\n    The goal is to maximize the sum of their radii using mathematical optimization.\n\n    Args:\n        n: Number of circles.\n        random_seed: Random seed for reproducibility.\n\n    Returns:\n        Tuple of (centers, radii, sum_of_radii)\n    \"\"\"\n    rng = np.random.default_rng(random_seed)\n\n    def solve_lp_radii(centers, margin=1e-8):\n        # Solve LP to find the mathematically optimal radii for fixed centers\n        c = -np.ones(n)\n        \n        bounds = []\n        for i in range(n):\n            x, y = centers[i]\n            max_r = min(x, 1.0 - x, y, 1.0 - y) - margin\n            bounds.append((0.0, max(0.0, max_r)))\n            \n        num_pairs = n * (n - 1) // 2\n        A = np.zeros((num_pairs, n))\n        b = np.zeros(num_pairs)\n        \n        idx = 0\n        for i in range(n):\n            for j in range(i + 1, n):\n                A[idx, i] = 1.0\n                A[idx, j] = 1.0\n                dist = np.linalg.norm(centers[i] - centers[j])\n                b[idx] = max(0.0, dist - margin)\n                idx += 1\n                \n        res = opt.linprog(c, A_ub=A, b_ub=b, bounds=bounds, method='highs')\n        if res.success:\n            return res.x, -res.fun\n        else:\n            return np.ones(n) * 1e-5, n * 1e-5\n\n    def hill_climb_centers(centers, steps=120, init_sigma=0.02, seed=42):\n        local_rng = np.random.default_rng(seed)\n        best_centers = centers.copy()\n        best_radii, best_score = solve_lp_radii(best_centers)\n        \n        for step in range(steps):\n            sigma = init_sigma * (1.0 - step / steps)\n            perturbed = best_centers + local_rng.normal(0, sigma, best_centers.shape)\n            perturbed = np.clip(perturbed, 1e-5, 1.0 - 1e-5)\n            \n            radii, score = solve_lp_radii(perturbed)\n            if score > best_score:\n                best_score = score\n                best_centers = perturbed\n                best_radii = radii\n                \n        return best_centers, best_radii, best_score\n\n    def objective(vars):\n        return -np.sum(vars[2 * n:])\n        \n    def constraints(vars):\n        centers = vars[:2 * n].reshape((n, 2))\n        radii = vars[2 * n:]\n        \n        cons = []\n        # Use 1e-9 tolerance during SLSQP to maximize continuous optimization freedom\n        cons.extend(centers[:, 0] - radii - 1e-9)\n        cons.extend(1 - centers[:, 0] - radii - 1e-9)\n        cons.extend(centers[:, 1] - radii - 1e-9)\n        cons.extend(1 - centers[:, 1] - radii - 1e-9)\n        \n        # Vectorized pairwise constraints\n        diffs = centers[:, np.newaxis, :] - centers[np.newaxis, :, :]\n        dist_sq = np.sum(diffs ** 2, axis=-1)\n        rad_sums = radii[:, np.newaxis] + radii[np.newaxis, :]\n        \n        idx = np.triu_indices(n, k=1)\n        cons.extend(dist_sq[idx] - (rad_sums[idx] + 1e-9) ** 2)\n                \n        return np.array(cons)\n\n    def bubble_bath(rng_seed, distribution):\n        local_rng = np.random.default_rng(rng_seed)\n        centers = local_rng.uniform(0.2, 0.8, (n, 2))\n        \n        if distribution == 'uniform':\n            target_r = np.ones(n) * (0.6 / np.sqrt(n))\n        elif distribution == 'bimodal':\n            target_r = np.concatenate([\n                local_rng.uniform(0.15, 0.25, n // 4),\n                local_rng.uniform(0.02, 0.08, n - n // 4)\n            ])\n        elif distribution == 'power':\n            target_r = local_rng.beta(1, 3, n) * 0.25 + 0.02\n        elif distribution == 'mixed_large_small':\n            target_r = np.zeros(n)\n            num_large = local_rng.integers(1, 4)\n            target_r[:num_large] = local_rng.uniform(0.25, 0.4, num_large)\n            target_r[num_large:] = local_rng.uniform(0.02, 0.08, n - num_large)\n        elif distribution == 'few_large':\n            target_r = np.zeros(n)\n            num_large = local_rng.integers(4, 8)\n            target_r[:num_large] = local_rng.uniform(0.15, 0.25, num_large)\n            target_r[num_large:] = local_rng.uniform(0.02, 0.06, n - num_large)\n        else: # exponential\n            target_r = local_rng.exponential(0.08, n) + 0.01\n            \n        target_r = np.clip(target_r, 0.01, 0.3)\n        radii = np.zeros(n)\n        \n        for step in range(300):\n            radii += (target_r - radii) * 0.05\n            for _ in range(4):\n                centers = np.clip(centers, radii[:, None] + 1e-4, 1 - radii[:, None] - 1e-4)\n                diffs = centers[:, np.newaxis, :] - centers[np.newaxis, :, :]\n                dist = np.linalg.norm(diffs, axis=-1)\n                np.fill_diagonal(dist, np.inf)\n                \n                rad_sums = radii[:, np.newaxis] + radii[np.newaxis, :]\n                overlap = rad_sums - dist\n                \n                if np.max(overlap) > 0:\n                    push_dirs = diffs / (dist[..., np.newaxis] + 1e-9)\n                    push_mags = np.maximum(overlap, 0) * 0.25\n                    centers += np.sum(push_dirs * push_mags[..., np.newaxis], axis=1)\n                                \n        return centers\n\n    # Generate diverse initial candidate center configurations\n    candidates = []\n\n    # 1. Grid arrangement\n    grid_size = int(np.ceil(np.sqrt(n)))\n    grid_centers = np.zeros((n, 2))\n    for i in range(n):\n        grid_centers[i, 0] = (i % grid_size + 0.5) / grid_size + rng.uniform(-0.01, 0.01)\n        grid_centers[i, 1] = (i // grid_size + 0.5) / grid_size + rng.uniform(-0.01, 0.01)\n    grid_centers = np.clip(grid_centers, 1e-5, 1.0 - 1e-5)\n    candidates.append(grid_centers)\n\n    # 2. Bubble baths\n    distributions = ['uniform', 'bimodal', 'power', 'mixed_large_small', 'few_large', 'exponential']\n    for idx in range(42):\n        dist = distributions[idx % len(distributions)]\n        candidates.append(bubble_bath(random_seed + idx, dist))\n\n    # Evaluate all candidates with the LP solver to find their initial optimal score\n    evaluated_candidates = []\n    for c_idx, centers in enumerate(candidates):\n        radii, score = solve_lp_radii(centers)\n        evaluated_candidates.append((centers, radii, score))\n\n    # Sort candidates by score and pick the top 6\n    evaluated_candidates.sort(key=lambda item: item[2], reverse=True)\n    top_candidates = evaluated_candidates[:6]\n\n    # Perform Hill Climbing on the top 6 candidates to optimize center coordinates\n    refined_candidates = []\n    for c_idx, (centers, _, _) in enumerate(top_candidates):\n        ref_centers, ref_radii, ref_score = hill_climb_centers(centers, steps=120, init_sigma=0.02, seed=random_seed + c_idx)\n        refined_candidates.append((ref_centers, ref_radii, ref_score))\n\n    # Sort refined candidates and pick the top 3\n    refined_candidates.sort(key=lambda item: item[2], reverse=True)\n    best_candidates = refined_candidates[:3]\n\n    # Run SLSQP optimization on the top 3 candidates to co-optimize centers and radii\n    best_final_score = -1.0\n    best_final_centers = None\n    best_final_radii = None\n\n    bounds = [(0, 1)] * (3 * n)\n\n    for c_idx, (centers, radii, _) in enumerate(best_candidates):\n        x0 = np.zeros(3 * n)\n        x0[:2 * n] = centers.flatten()\n        x0[2 * n:] = radii\n\n        res = opt.minimize(\n            objective, x0, bounds=bounds,\n            constraints={'type': 'ineq', 'fun': constraints},\n            options={'maxiter': 500, 'ftol': 1e-7}\n        )\n\n        final_centers = res.x[:2 * n].reshape((n, 2))\n        \n        # Solve LP one final time to guarantee 100% feasibility (safety margin 1e-8)\n        # and to find the absolute mathematically optimal radii for these final centers!\n        opt_radii, opt_score = solve_lp_radii(final_centers, margin=1e-8)\n\n        if opt_score > best_final_score:\n            best_final_score = opt_score\n            best_final_centers = final_centers\n            best_final_radii = opt_radii\n\n    return best_final_centers, best_final_radii, best_final_score\n\n\n# EVOLVE-BLOCK-END\n\n\ndef _circles_overlap(centers, radii):\n    \"\"\"Protected function to compute max radii.\"\"\"\n    n = centers.shape[0]\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            dist = np.sqrt(np.sum((centers[i] - centers[j]) ** 2))\n            if radii[i] + radii[j] > dist:\n                return True\n\n    return False\n\n\ndef evaluate(eval_inputs: Mapping[str, Any]) -> dict[str, float]:\n    \"\"\"Construct a packing and evaluate its score.\"\"\"\n    n = eval_inputs[\"n\"]\n    if \"random_seed\" not in eval_inputs:\n        random_seed = 42\n    else:\n        random_seed = eval_inputs[\"random_seed\"]\n    centers, radii, _ = construct_packing(n, random_seed=random_seed)\n    if (\n        centers.shape != (n, 2)\n        or not np.isfinite(centers).all()\n        or not ((radii[:, None] <= centers) & (centers <= 1 - radii[:, None])).all()\n    ):\n        return {\"sum_of_radii\": -np.inf}\n\n    if radii.shape != (n,) or not np.isfinite(radii).all() or not (0 <= radii).all():\n        return {\"sum_of_radii\": -np.inf}\n\n    if _circles_overlap(centers, radii):\n        return {\"sum_of_radii\": -np.inf}\n\n    return {\"sum_of_radii\": float(np.sum(radii))}",
+    "circles": [
+      {
+        "x": 0.47661897319662816,
+        "y": 0.5824864072960129,
+        "r": 0.07501249293260889
+      },
+      {
+        "x": 0.08252344481768771,
+        "y": 0.9174765551821394,
+        "r": 0.08252343481768772
+      },
+      {
+        "x": 0.28970183173927616,
+        "y": 0.5038746804530184,
+        "r": 0.12776279407869057
+      },
+      {
+        "x": 0.7051013591947859,
+        "y": 0.12921440815325982,
+        "r": 0.12921439815325983
+      },
+      {
+        "x": 0.9291572297614946,
+        "y": 0.7069197466856725,
+        "r": 0.07084276023850539
+      },
+      {
+        "x": 0.646629789213332,
+        "y": 0.5541515553566136,
+        "r": 0.09734335393652455
+      },
+      {
+        "x": 0.1331305179033386,
+        "y": 0.29518653007197926,
+        "r": 0.1331305079033386
+      },
+      {
+        "x": 0.8911914571286901,
+        "y": 0.27762397644612585,
+        "r": 0.10880853287130993
+      },
+      {
+        "x": 0.6701152193186646,
+        "y": 0.8971172449734922,
+        "r": 0.1028827450265078
+      },
+      {
+        "x": 0.3657099169610243,
+        "y": 0.721927961447723,
+        "r": 0.10315810531296729
+      },
+      {
+        "x": 0.7591547753963225,
+        "y": 0.7155110313782955,
+        "r": 0.09937663130800498
+      },
+      {
+        "x": 0.2695044995339595,
+        "y": 0.10273839961570226,
+        "r": 0.10273838961570227
+      },
+      {
+        "x": 0.5644919152862204,
+        "y": 0.7288996937363742,
+        "r": 0.09574610261431277
+      },
+      {
+        "x": 0.8863654258049319,
+        "y": 0.8863654258049631,
+        "r": 0.11363456419503687
+      },
+      {
+        "x": 0.47483198966103135,
+        "y": 0.1025891457589352,
+        "r": 0.1025891357589352
+      },
+      {
+        "x": 0.08097080817248517,
+        "y": 0.502837058794837,
+        "r": 0.08097079817248518
+      },
+      {
+        "x": 0.5511828801899383,
+        "y": 0.26161082440637495,
+        "r": 0.07381196751215421
+      },
+      {
+        "x": 0.08386167699473479,
+        "y": 0.08386167699532236,
+        "r": 0.0838616669947348
+      },
+      {
+        "x": 0.13144941412231276,
+        "y": 0.7091723702528413,
+        "r": 0.13144940412231276
+      },
+      {
+        "x": 0.9148670174499655,
+        "y": 0.08513298255020094,
+        "r": 0.08513297255003455
+      },
+      {
+        "x": 0.4664706789893502,
+        "y": 0.8992272826089192,
+        "r": 0.10077270739108085
+      },
+      {
+        "x": 0.6969477506583454,
+        "y": 0.36076627876123973,
+        "r": 0.10248096503232529
+      },
+      {
+        "x": 0.8703044490547232,
+        "y": 0.515211718515429,
+        "r": 0.12969554094527685
+      },
+      {
+        "x": 0.3724526247439836,
+        "y": 0.28480309683253424,
+        "r": 0.10641672639503538
+      },
+      {
+        "x": 0.5139656779009604,
+        "y": 0.42144740310637574,
+        "r": 0.09030034358169728
+      },
+      {
+        "x": 0.26491665393638264,
+        "y": 0.8992186912008546,
+        "r": 0.10078129879914538
+      }
+    ]
+  }
+]

@@ -42,50 +42,84 @@ def _load_initial_program():
 INITIAL_PROGRAM_CODE = _load_initial_program()
 
 
+def record_real_candidate(candidate_id, code, score, error, circles):
+    """Save 100% authentic candidate run data into a local JSON file."""
+    import json
+    import os
+    res_path = "/Users/dulee/Desktop/Alphaevolve/examples/circle_packing/src/real_experiment_data.json"
+    data = []
+    if os.path.exists(res_path):
+        try:
+            with open(res_path, "r") as f:
+                data = json.load(f)
+        except Exception:
+            data = []
+
+    data.append({
+        "candidate_id": candidate_id,
+        "score": score,
+        "error": error,
+        "code": code,
+        "circles": circles
+    })
+
+    with open(res_path, "w") as f:
+        json.dump(data, f, indent=2)
+
+
 def circle_packing_evaluation(program_candidate) -> dict:
     logger.debug("Starting evaluation: %s", program_candidate)
     code = program_candidate["content"]["files"][0]["content"]
+    candidate_id = program_candidate.get("name", "").split("/")[-1]
     logger.debug("Code length: %d", len(code))
 
-    # Sentinel used when the program fails to produce a valid score. The API
-    # requires a numeric score per metric and `sum_of_radii` is maximized, so a
-    # large negative value keeps failed candidates from being selected.
     score_value: float = -1e12
     insights_list: list[AlphaEvolveEvaluationInsight] = []
+    eval_error: str = ""
+    circles_data = []
 
     try:
         exec_namespace = {"np": np, "Any": Any, "Mapping": Mapping}
         exec(code, exec_namespace)
         eval_func = exec_namespace.get("evaluate")
+        construct_func = exec_namespace.get("construct_packing")
 
         if callable(eval_func):
             result = eval_func(CIRCLE_PACKING_EVALUATION_INPUTS)
             score = result.get(CIRCLE_PACKING_EVALUATION_METRIC)
             if score != -np.inf and score is not None:
                 score_value = float(score)
+                # Compute actual (x, y, r) for 26 circles if construct_packing is available
+                if callable(construct_func):
+                    try:
+                        centers, radii, _ = construct_func(26, random_seed=42)
+                        circles_data = [{'x': float(centers[i][0]), 'y': float(centers[i][1]), 'r': float(radii[i])} for i in range(len(radii))]
+                    except Exception as e:
+                        logger.warning("Error getting circles coords: %s", e)
             else:
+                eval_error = "Returned invalid score (-infinity or None)"
                 insights_list.append(
                     AlphaEvolveEvaluationInsight(
                         label="Invalid Score",
                         text="The evaluation function returned an invalid score (-infinity or None), suggesting the packing constraints were not met.",
                     )
                 )
-        else:
-            insights_list.append(
-                AlphaEvolveEvaluationInsight(
-                    label="Invalid Program Structure",
-                    text="The program is missing a callable 'evaluate' function, which is required for evaluation.",
-                )
-            )
-
     except Exception as e:
-        error_message = (
-            f"The program failed during execution with the following error: {e}"
+        eval_error = f"{type(e).__name__}: {str(e)}"
+        logger.error(
+            "The program failed during execution with the following error: %s",
+            e,
+            exc_info=True,
         )
-        logger.exception(error_message)
         insights_list.append(
-            AlphaEvolveEvaluationInsight(label="Runtime Error", text=error_message)
+            AlphaEvolveEvaluationInsight(
+                label="Execution Error",
+                text=f"The program failed during execution with the following error: {e}",
+            )
         )
+
+    # Save 100% authentic candidate run data into a local JSON file
+    record_real_candidate(candidate_id, code, score_value, eval_error, circles_data)
 
     scores = [
         AlphaEvolveEvaluationScore(
@@ -125,10 +159,10 @@ def visualize_packing(circles, title, container_size=1.0):
     )
     ax.add_patch(container)
 
-    colors = plt.cm.get_cmap("viridis", len(circles))
+    cmap = plt.colormaps["viridis"].resampled(len(circles))
     for i, (x, y, r) in enumerate(circles):
         circle = patches.Circle(
-            (x, y), r, facecolor=colors(i), alpha=0.8, edgecolor="black", linewidth=0.5
+            (x, y), r, facecolor=cmap(i), alpha=0.8, edgecolor="black", linewidth=0.5
         )
         ax.add_patch(circle)
     plt.show()

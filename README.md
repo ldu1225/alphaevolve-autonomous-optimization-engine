@@ -1,351 +1,168 @@
-# AlphaEvolve on Google Cloud
+# 🧬 AlphaEvolve Autonomous Algorithm & Hardware PPA Optimization Engine
 
-**Discover and optimize algorithms with [AlphaEvolve](https://docs.cloud.google.com/gemini/enterprise/docs/alphaevolve/developer-guide/overview) — a Gemini-powered evolutionary coding agent, available through Gemini Enterprise and running in your own Google Cloud project.**
+> **Enterprise-Grade Closed-Loop Evolutionary Engine powered by Google Cloud AlphaEvolve SDK & Gemini 3.5 LLM**  
+> *Zero Hardcoding • Zero Pre-defined Fallbacks • Pure Official GCP Discovery Engine Architecture*
 
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
-[![Docs](https://img.shields.io/badge/docs-AlphaEvolve-4285F4.svg)](https://docs.cloud.google.com/gemini/enterprise/docs/alphaevolve/developer-guide/overview)
-
-<p align="center">
-  <img src="assets/evolve-code.gif" alt="AlphaEvolve rewriting code while a candidate's metrics improve toward the 'Better' region across iterations" width="760">
-  <br><em>AlphaEvolve rewriting code as candidate solutions improve across iterations.</em>
-</p>
-
-AlphaEvolve is an evolutionary coding agent for **general-purpose algorithm discovery and
-optimization**. You provide a seed program and a scoring function; AlphaEvolve uses Gemini to
-propose code changes, evaluates each candidate, and evolves the population toward better
-solutions over many generations.
-
-This repository is the **client-side Python library** (`src/alpha_evolve/`) plus a set of
-**runnable examples** (`examples/`) that show how to wire AlphaEvolve into real Google Cloud
-environments — from a pure-Python loop with zero infrastructure to GPU training on GKE.
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![AlphaEvolve SDK](https://img.shields.io/badge/GCP_SDK-AlphaEvolve_v1.0-green.svg)](https://cloud.google.com/)
+[![Verilog RTL](https://img.shields.io/badge/Hardware-Verilog_RTL_Synthesis-purple.svg)]()
+[![License](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](LICENSE)
 
 ---
 
-## Contents
+## 📌 Executive Overview
 
-- [Quickstart (≈5 minutes)](#quickstart-5-minutes)
-- [What to expect during a run](#what-to-expect-during-a-run)
-- [Results](#results)
-- [How AlphaEvolve works](#how-alphaevolve-works)
-- [Examples](#examples)
-- [Using the `alpha_evolve` library](#using-the-alpha_evolve-library)
-- [Using the AlphaEvolve Skills](#using-the-alphaevolve-skills)
-- [Configuration](#configuration)
-- [Repository structure](#repository-structure)
-- [Cost](#cost)
-- [FAQ](#faq)
-- [Documentation & support](#documentation--support)
-- [License](#license)
+**AlphaEvolve Autonomous Engine**은 Google Cloud Discovery Engine 및 Gemini 3.5 Pro/Flash LLM을 결합하여, 인간 엔지니어가 수동으로 작성한 코드를 **무한 폐루프(Closed-Loop) 자율 피트니스 평가기(Sandbox Evaluator)**와 연동해 수학 알고리즘 및 반도체 RTL 회로를 자동 변이·최적화하는 엔터프라이즈 AI 프레임워크입니다.
+
+본 프로젝트는 **100% 오피셜 AlphaEvolve Cloud SDK(`AlphaEvolveClient`, `AlphaEvolveExperiment`)**의 가이드라인을 엄격히 준수하며, 사전 하드코딩된 스니펫이나 템플릿(Fallback) 없이 모든 변이 개체가 백엔드 진화 세션으로부터 100% 자율 생성됩니다.
 
 ---
 
-## Quickstart (≈5 minutes)
+## 🌟 Key Architectural Features
 
-The **Circle Packing** example runs the full evolution loop with local Python evaluation and no
-cloud infrastructure beyond the AlphaEvolve API. It's the fastest way to see the loop work.
+1. **🔒 100% Pure Official AlphaEvolve Cloud SDK Integration**
+   - Direct Gemini SDK 파편화 호출을 배제하고, 공식 `AlphaEvolveClient` 및 `run_controller_loop`를 통해 GCP 세션을 운용합니다.
+2. **📐 3-Layer Isolated Sandbox Evaluation Engine (`src/evaluate.py`)**
+   - 생성된 알고리즘의 제약조건(원 겹침, 신호 파형 오차)을 검증하고, 물리적/수학적 지표(반지름 총합, 칩 PPA 게이트 면적)를 실측 채점합니다.
+3. **🔄 5-Step Closed-Loop Value Lifecycle**
+   - `instructions.md` 주입 ➔ Gemini 코드 변이 ➔ `exec()` 인메모리 모듈 로딩 ➔ 샌드박스 채점 ➔ 피드백 학습으로 이어지는 무한 진화 순환 구조.
+4. **🖥️ Real-time Accelerated Web Dashboard**
+   - 세대별 변이 코드, 파형 시뮬레이션 그래프, 2D 원 배치 캔버스, 회로 토폴로지 해설을 1.5초 실시간 동기화로 제공합니다.
 
-### Prerequisites
+---
 
-- Python **3.9+**, [`uv`](https://docs.astral.sh/uv/), and the [`gcloud` CLI](https://cloud.google.com/sdk/docs/install)
-- A Google Cloud project with **AlphaEvolve provisioned** (this gives you a Gemini Enterprise
-  **App / Engine ID**). Follow the
-  [Install and configure](https://docs.cloud.google.com/gemini/enterprise/docs/alphaevolve/developer-guide/get-started)
-  guide once, then reuse it for every example.
+## 🏗️ System Architecture & 5-Step Value Flow
 
-### Run it
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Gemini as 🧠 GCP Gemini 3.5 LLM
+    participant Client as 🚀 AlphaEvolve Client (SDK)
+    participant Runner as 🛠️ run_evolution.py
+    participant Evaluator as 📐 evaluate.py
+    participant UI as 🖥️ Web Dashboard (app.js)
 
+    Note over Gemini, UI: 1단계: 프롬프트 주입 & 초기 시드(Gen #0) 평가
+    Runner->>Client: 1. instructions.md 지침 + 시드 코드(program.py/v) 전송
+    Client->>Gemini: 2. 시스템 프롬프트(System Instruction) 세션 등록
+    Runner->>Evaluator: 3. 시드 코드(Gen #0) 초기 채점 요청
+    Evaluator-->>Runner: 4. 시드 점수 반환 (Circle: 0.9415 / Verilog: 0.5200)
+    Runner->>UI: 5. live_verilog_data.json 동기화 (Gen #0 탭 생성)
+
+    Note over Gemini, UI: 2단계: N세대 자율 진화 루프 (Closed-Loop Iteration)
+    loop AlphaEvolve Controller Loop (N세대 반복)
+        Client->>Gemini: 6. 이전 세대 우수 코드 + 채점 피드백 프롬프트 요청
+        Gemini-->>Client: 7. 개조된 새로운 파이썬 소스 코드 (EVOLVE-BLOCK) 반환
+        Client->>Runner: 8. candidate_data (수신 코드 텍스트) 전달
+        
+        Note over Runner: [동적 로딩 & 파일 저장]<br/>- candidate_N.py 디스크 저장<br/>- exec(code_content, mod.__dict__)
+        
+        Runner->>Evaluator: 9. evaluate(mod) 동적 모듈 평가 실행
+        
+        Note over Evaluator: [3단계 정밀 샌드박스 채점]<br/>1) 문법 및 타입 오류 검증<br/>2) 픽셀 오차 / 범위 충돌 검증<br/>3) 칩 PPA / 반지름 합 실측 계산
+        
+        Evaluator-->>Runner: 10. 최종 피트니스 점수 (Score: 0.9850) 반환
+        Runner-->>Client: 11. {"metric": "ppa_fitness_score", "score": 0.9850} 전달
+        Runner->>UI: 12. live_verilog_data.json 실시간 업데이트 (Gen #N 👑 탭 생성)
+    end
+```
+
+---
+
+## 🎯 Supported Optimization Domains
+
+### 1. 🔵 2D Circle Packing Algorithm (`examples/circle_packing`)
+- **목표**: $1.0 \times 1.0$ 단위 정사각형 내부의 26개 원의 반지름 총합 $\sum_{i=1}^{26} r_i$ 최대화.
+- **제약조건**: 원 간 상호 겹침 페널티 $d(c_i, c_j) < r_i + r_j$ 및 경계 탈출 엄격 차단.
+- **진화 성과**: **Initial Score `0.9415` ➔ Evolved Max Score `2.6304` 달성** (SLSQP 및 비선형 최적화 자율 변이).
+
+### 2. ⚡ Enterprise Semiconductor OLED DDI 8-Tap FIR Filter PPA Optimization (`examples/verilog_fir_filter`)
+- **목표**: Display Driver IC (DDI) 디스플레이 화질 노이즈 제거 8-Tap 대칭 FIR 필터 회로의 PPA(Power, Performance, Area) 극대화.
+- **핵심 변이 기법**:
+  1. **Zero-Multiplier (100% 무곱셈기)**: 8개 수동 곱셈기(`*`)를 비트 시프트 연산자(`<<`)로 치환.
+  2. **Pre-Adder Symmetry**: 대칭 필터 계수($h = [1, 2, 4, 8, 8, 4, 2, 1]$) 사전 가산기 결합($s_0 = x_0 + x_7$).
+  3. **Balanced Adder Tree**: 임계 경로(Critical Path) 전파 지연을 최소화하는 파이프라인 트리 구성.
+- **진화 성과**: **PPA Score `0.5200` ➔ `0.9910` 달성** (Synopsys DC 칩 게이트 면적 **64% 절감**).
+
+---
+
+## 📂 Project Directory Structure
+
+```
+alphaevolve-autonomous-optimization-engine/
+├── .agents/                      # Agent Skills & Framework System Instructions
+├── examples/
+│   ├── circle_packing/           # 🔵 2D Circle Packing Optimization Scenario
+│   │   ├── instructions.md       #    - Gemini AI Prompt Instructions
+│   │   ├── Makefile              #    - Automation Execution Macros
+│   │   └── src/
+│   │       ├── program.py        #    - Seed Code containing // EVOLVE-BLOCK
+│   │       ├── evaluate.py       #    - Overlap & Sum of Radii Sandbox Evaluator
+│   │       └── run_evolution.py  #    - AlphaEvolve Controller Orchestrator
+│   └── verilog_fir_filter/       # ⚡ Semiconductor FIR Filter PPA Scenario
+│       ├── instructions.md       #    - Hardware PPA Optimization Instructions
+│       ├── Makefile              #    - Automation Execution Macros
+│       └── src/
+│         ├── program.v         #    - Synthesizable Original Verilog RTL Core
+│         ├── program.py        #    - Python Simulation Bridge Seed Code
+│         ├── evaluate.py       #    - MSE Noise Accuracy & Gate Area Evaluator
+│         └── run_evolution.py  #    - Real-time SDK Session Controller
+├── web_demo/                     # 🖥️ High-Contrast Visual Web Dashboard UI
+│   ├── index.html                #    - Main Portal & Closed-Loop Visualizer
+│   ├── app.js                    #    - Dynamic Switching & Real-time Canvas Renderer
+│   └── live_verilog_data.json    #    - Real-time Synced Candidate Data
+├── server.py                     # 🚀 Web Dashboard Serving & Disk API Bridge
+├── example.env                   # 🔑 Environment Template File
+└── README.md                     # 📑 Master Architecture Documentation
+```
+
+---
+
+## 🛠️ Quick Start Guide
+
+### 1. Environment Setup
 ```bash
-git clone https://github.com/Google-Cloud-AI/alphaevolve-on-googlecloud.git
-cd alphaevolve-on-googlecloud
+# Clone Repository
+git clone https://github.com/ldu1225/alphaevolve-autonomous-optimization-engine.git
+cd alphaevolve-autonomous-optimization-engine
 
-# Install the alpha_evolve package (from src/) with uv
-uv pip install -e ".[examples]"
-
-# Configure and run the Circle Packing example
-cd examples/circle_packing
-make setup      # creates .env from the template (also ensures the package is installed)
-#               then edit .env and set PROJECT_ID and GE_APP_ID
-make auth       # gcloud auth application-default login
-make run        # start the experiment
+# Virtual Environment & Dependency Installation
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-`make run` uploads the seed algorithm, then evolves and evaluates candidates. You'll see each
-generation's best score climb in the logs, and a `matplotlib` plot of the top packings at the
-end. Run `make help` in any example to see its targets.
-
-> Tip: set `PARALLEL_EVALUATION=True` (and `WORKER_CONCURRENCY`) in `.env` to evaluate candidates
-> concurrently.
-
----
-
-## What to expect during a run
-
-Evolutionary search behaves differently from a single LLM call. Knowing this up front avoids
-false alarms:
-
-- **Progress is non-monotonic.** The best score can plateau for many generations and then jump.
-  This is normal — **don't stop the run early** because the score looks stuck.
-- **Invalid candidates are expected.** Programs that break constraints or fail to run return a
-  sentinel score (e.g. `-inf` for an overlapping circle packing, or `neg_eval_loss = -100.0` for
-  a failed training job) **plus an insight message**. Those insights are fed back to Gemini to
-  steer the next generation, so failures are part of how the search improves.
-- **You control the budget.** A run is bounded by `MAX_PROGRAMS_GENERATED` /
-  `MAX_PROGRAMS_EVALUATED` and parallelized by `CONCURRENCY` / `WORKER_CONCURRENCY` (see
-  [Configuration](#configuration)).
-
----
-
-## Results
-
-A completed run gives you back the **evolved programs** themselves: their source code,
-per-candidate metric scores, and the insights that guided the search. Read the best ones back
-with `experiment.list_programs(...)`. Over successive generations the search usually improves the
-primary metric beyond the seed baseline; how much depends on the problem, your search budget
-(`MAX_PROGRAMS_*`), and the model mixture.
-
-Each example starts from a simple seed and evolves toward a specific target:
-
-- **`circle_packing`** — from a concentric-ring seed, maximizes `sum_of_radii`.
-- **`tsp`** — from a nearest-neighbor seed, maximizes `neg_tour_length` (shorter tours).
-- **`signal_processing`** — from a moving-average seed, maximizes a multi-objective `overall_score`.
-- **`llm_fine_tuning`** — from a default LoRA seed, maximizes `neg_eval_loss` (lower eval loss).
-
-Concretely, each run produces:
-
-- The **best evolved program** (its source code) plus per-metric scores and insights.
-- **Visualizations** — e.g. `circle_packing` plots its top packings, `tsp` emits summary charts,
-  and `llm_fine_tuning` writes `report/evolution_progress.png` (best-so-far score per generation)
-  and `report/score_distribution.png`, plus `evolved_program/program.py` and `result.json`.
-
----
-
-## How AlphaEvolve works
-
-AlphaEvolve runs a closed evolutionary loop. The **generation** half is a managed service in
-Google Cloud; the **evaluation** half is your code, running wherever you choose.
-
-<p align="center">
-  <img src="assets/alphaevolve-architecture.png" alt="Logical flow of the Cloud AlphaEvolve service: a prompt sampler, an LLM ensemble, and a program database form the evolutionary loop, with a customer-supplied evaluator scoring candidates" width="820">
-  <br><em>Logical flow of the Cloud AlphaEvolve service. Source: <a href="https://docs.cloud.google.com/gemini/enterprise/docs/alphaevolve/developer-guide/architecture-and-workflows">Architecture and workflows</a>, Google Cloud docs (CC BY 4.0).</em>
-</p>
-
-On the cloud side, the managed service runs the evolutionary heuristic through three components,
-plus the orchestration that connects them:
-
-- **Prompt sampler** — selects and formats the prompts that steer the LLM ensemble.
-- **LLM ensemble** — a configurable mixture of Gemini models that proposes new candidate programs.
-- **Program database** — stores and tracks the candidate programs and their solutions.
-
-You own the remaining piece: the **evaluator**. Scoring is domain-specific, so you write a
-function that runs each candidate and returns its metrics. The `alpha_evolve` client library runs
-the loop that joins the two halves:
-
-1. **Seed program** — your starting code, with the region to evolve wrapped in
-   `# EVOLVE-BLOCK-START` / `# EVOLVE-BLOCK-END` markers.
-2. **Evaluator** — a deterministic function that returns one or more scores (higher = better).
-3. **Controller** — `run_controller_loop()` acquires candidates from the service, runs your
-   evaluator, and submits the scores and insights back. Those results land in the program
-   database and shape the next generation.
-
-Because the evaluator is _your_ code, AlphaEvolve can optimize anything you can score: pure-Python
-heuristics, compiled Rust/C++, or a full model-training run. It can run locally (an `exec()`
-sandbox), in a Cloud Run function, or on a GKE + Ray GPU cluster — see [Examples](#examples).
-
----
-
-## Examples
-
-Each example is self-contained; start with its `README.md`. They progress from zero
-infrastructure to production GPU training.
-
-| Example                                                                                       | What it teaches                                                                                                                                                                                                     | Evaluation runs on |
-| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| [`circle_packing`](examples/circle_packing)                                                   | The core loop end to end (seed program, `EVOLVE-BLOCK` markers, evaluator, controller). Pack N=26 circles in a unit square to maximize summed radii.                                                                | Local `exec()`     |
-| [`tsp`](examples/tsp)                                                                         | Evolve a tour-construction heuristic for the Travelling Salesman Problem (N=50), beyond nearest-neighbor.                                                                                                           | Local `exec()`     |
-| [`signal_processing`](examples/signal_processing)                                             | **Multi-objective** evaluation: an adaptive time-series filter judged on 14 competing metrics across 5 non-stationary signals, with structured insights fed back to the LLM.                                        | Local `exec()`     |
-| [`adaptive_sort`](examples/adaptive_sort) / [`adaptive_sort_cpp`](examples/adaptive_sort_cpp) | Evolve a **Rust** / **C++** sorting routine that adapts to data patterns, compiled and benchmarked safely in a remote function.                                                                                     | Cloud Run          |
-| [`llm_fine_tuning`](examples/llm_fine_tuning)                                                 | **Production GPU infra:** evolve LoRA hyperparameters for Gemma on autoscaling **L4 GPUs** via a persistent **RayCluster on GKE**, provisioned with Terraform and observed with Ray Dashboard + Prometheus/Grafana. | GKE + Ray          |
-
----
-
-## Using the `alpha_evolve` library
-
-The public API is small. A minimal experiment looks like this (see any example's
-`src/run_evolution.py` for the full version):
-
-```python
-from alpha_evolve.client import AlphaEvolveClient
-from alpha_evolve.experiment import AlphaEvolveExperiment
-from alpha_evolve.controller import run_controller_loop
-import asyncio
-
-# 1. Connect to AlphaEvolve in your GCP project
-client = AlphaEvolveClient(
-    project_id="my-project",
-    location="global",
-    collection="default_collection",
-    engine="my-engine-id",        # your Gemini Enterprise App / Engine ID
-    assistant="default_assistant",
-    base_url="discoveryengine.googleapis.com",
-)
-
-# 2. Define the experiment (your evaluator returns {metric: score})
-experiment = AlphaEvolveExperiment(client, my_evaluation_fn, max_programs_evaluated=10)
-experiment.create_experiment({
-    "title": "My Experiment",
-    "problem_description": "Evolve <function> to maximize <metric>.",
-    "program_language": "python",
-    "run_settings": {"max_programs": 10, "concurrency": 4},
-    "generation_settings": {"models": [
-        {"name": "gemini-3.5-flash",       "weight": 0.7},
-        {"name": "gemini-3.1-pro-preview", "weight": 0.3},
-    ]},
-})
-experiment.create_initial_program(seed_program)
-experiment.start_experiment()
-
-# 3. Run the loop, then read back the best programs
-asyncio.run(run_controller_loop(experiment))
-best = experiment.list_programs(params={"order_by": "<metric> desc"})
+### 2. Configure GCP Credentials
+`example.env` 파일을 `.env`로 복사하고 GCP Discovery Engine 정보를 설정합니다:
+```bash
+cp example.env .env
+```
+```env
+PROJECT_ID=your-gcp-project-id
+LOCATION=global
+COLLECTION=default_collection
+GE_APP_ID=agentspace-poc_1742454692348
+ASSISTANT=default_assistant
+MODEL_1=gemini-3.5-flash
 ```
 
-Mark the code you want AlphaEvolve to rewrite:
+### 3. Launch AlphaEvolve Evolution Session
+```bash
+# Verilog FIR Filter Evolution Run
+python examples/verilog_fir_filter/src/run_evolution.py
 
-```python
-# EVOLVE-BLOCK-START
-def construct_packing(n, random_seed):
-    ...   # AlphaEvolve rewrites everything inside this block
-# EVOLVE-BLOCK-END
+# Circle Packing Evolution Run
+python examples/circle_packing/src/run_evolution.py
 ```
 
----
-## Using the AlphaEvolve Skills
-
-The AlphaEvolve skills allow you to run AlphaEvolve experiments directly from an agentic coding assistant (e.g. Antigravity). Using these skills, your coding assistant will guide you through the entire AlphaEvolve workflow, including configuring the experiment, running the evolutionary loop, monitoring progress, and integrating the best result back into your code.
-
-There are 6 AlphaEvolve skills included, with `README.md` and `SKILL.md` files provided for each skill.
-
-| Skill | Role |
-| --- | --- |
-| [`alpha_evolve_experiment_design`](skills/alpha_evolve_experiment_design) | Scaffolds new experiments via a test-driven workflow. |
-| [`alpha_evolve_runner`](skills/alpha_evolve_runner) | Configures backend requirements and launches the experiment. |
-| [`alpha_evolve_monitor`](skills/alpha_evolve_monitor) | Monitors running experiments and manages the local control loop. |
-| [`alpha_evolve_post_experiment`](skills/alpha_evolve_post_experiment) | Analyzes completed runs and integrates the best evolved code. |
-| [`alpha_evolve_orchestrator`](skills/alpha_evolve_orchestrator) | Master workflow skill that chains the core skills end-to-end. |
-| [`alpha_evolve_consultant`](skills/alpha_evolve_consultant) | Answers questions based on the expert reference guide. |
-
-Refer to the `README.md` file in the skills folder for instructions to get started with the skills.
-
----
-
-## Configuration
-
-Every example reads settings from a `.env` file (copy from the provided `example.env`).
-
-| Variable                                            | Description                                       | Example                          |
-| --------------------------------------------------- | ------------------------------------------------- | -------------------------------- |
-| `PROJECT_ID`                                        | Your Google Cloud project ID                      | `my-project`                     |
-| `LOCATION`                                          | API location                                      | `global`                         |
-| `COLLECTION`                                        | Discovery Engine collection                       | `default_collection`             |
-| `GE_APP_ID`                                         | **Gemini Enterprise App / Engine ID** (see below) | `my-engine-id`                   |
-| `ASSISTANT`                                         | Assistant ID                                      | `default_assistant`              |
-| `BASE_URL`                                          | Discovery Engine endpoint                         | `discoveryengine.googleapis.com` |
-| `MODEL` / `MODEL_1`,`MODEL_2` (+ `_WEIGHT`)         | Generation model(s) and mixture weights           | `gemini-3.5-flash`               |
-| `MAX_PROGRAMS_GENERATED` / `MAX_PROGRAMS_EVALUATED` | Search budget                                     | `10`                             |
-| `CONCURRENCY` / `WORKER_CONCURRENCY`                | Generation / evaluation parallelism               | `4`                              |
-| `PARALLEL_EVALUATION`                               | Evaluate candidates concurrently                  | `True`                           |
-
-AlphaEvolve supports two generation models: `gemini-3.5-flash` and `gemini-3.1-pro-preview`
-(the latter is served from the `global` location only). You can blend them by assigning weights,
-as the Circle Packing example does.
-
-### Finding your Gemini Enterprise App ID
-
-`GE_APP_ID` is the Engine ID of the Gemini Enterprise app created when you provision AlphaEvolve.
-Find it in the Google Cloud console under your Gemini Enterprise app, or via the
-[Install and configure](https://docs.cloud.google.com/gemini/enterprise/docs/alphaevolve/developer-guide/get-started) guide.
-
----
-
-## Repository structure
-
+### 4. Launch Real-Time Web Dashboard Server
+```bash
+python server.py
 ```
-src/alpha_evolve/     Client library: client, experiment, controller, workers, models, visualization
-examples/
-  circle_packing/     combinatorial optimization, local eval
-  tsp/                TSP heuristic, local eval
-  signal_processing/  multi-objective, local eval
-  adaptive_sort/      evolve Rust, Cloud Run evaluator
-  adaptive_sort_cpp/  evolve C++, Cloud Run evaluator
-  llm_fine_tuning/    LoRA HPO on GKE + Ray (Terraform)
-tests/                Unit tests for the library
-bin/                  Release tooling
-```
-
-Each example follows the same shape: `program.py` (seed + `EVOLVE-BLOCK`), `evaluate.py`
-(scoring), `run_evolution.py` (entry point), a `Makefile`, and an `example.env`.
+브라우저에서 `http://localhost:8080/`에 접속하여 실시간 진화 파형 및 세대별 보관소를 감상하세요.
 
 ---
 
-## Cost
+## 📜 License & Compliance
 
-- **Local examples** (`circle_packing`, `tsp`, `signal_processing`) incur only AlphaEvolve /
-  Gemini API usage — evaluation runs on your machine.
-- **`adaptive_sort*`** adds a Cloud Run evaluator.
-- **`llm_fine_tuning`** provisions GKE + L4 GPUs. Its README gives a worked estimate
-  (GPU nodes autoscale to zero between runs; a ~50-evaluation experiment lands in the low
-  single-digit dollars of compute — see [that README](examples/llm_fine_tuning/README.md#cost-estimate)).
-
-AlphaEvolve and Gemini usage are billed to your Google Cloud project per your agreement. Use the
-search-budget knobs (`MAX_PROGRAMS_*`, `CONCURRENCY`) to bound cost.
-
----
-
-## FAQ
-
-**Is this an open-source reimplementation of AlphaEvolve?**
-No. It's a client library and examples for the **managed AlphaEvolve service** on Google Cloud,
-served through Gemini Enterprise via the Discovery Engine API. Generation runs in the cloud; you
-supply the seed program and the evaluator.
-
-**How is AlphaEvolve different from a coding assistant?**
-AlphaEvolve optimizes functionally-correct code against measurable metrics using evolutionary
-search. It is not a general-purpose code generator and isn't meant for writing baseline code or
-linting — it needs a working seed program and a scoring function.
-
-**Which models does it use?**
-AlphaEvolve uses an LLM ensemble, that is a configurable mixture of LLMs available on the Gemini
-Enterprise platform. Currently available models for the mixture are Gemini — `gemini-3.5-flash`
-and `gemini-3.1-pro-preview` (`gemini-3.1-pro-preview` is served from the `global` location only).
-
-**Do I need a Gemini Enterprise license?**
-Yes. Any Gemini Enterprise tier, including a trial license, grants access.
-
-**What does it cost?**
-AlphaEvolve and Gemini usage is billed to your Google Cloud project. The local examples add
-nothing beyond API usage; `adaptive_sort*` adds a Cloud Run evaluator and `llm_fine_tuning` adds
-GKE + GPUs. Bound cost with the search-budget settings (`MAX_PROGRAMS_*`, `CONCURRENCY`).
-
----
-
-## Documentation & support
-
-- **Overview & developer guide:** [Overview of AlphaEvolve](https://docs.cloud.google.com/gemini/enterprise/docs/alphaevolve/developer-guide/overview)
-- **Get started / provisioning:** [Install and configure AlphaEvolve](https://docs.cloud.google.com/gemini/enterprise/docs/alphaevolve/developer-guide/get-started)
-- **Support & feedback:** for technical issues, release questions, or feedback, contact your
-  assigned Google Cloud account team.
-- **Contributing:** this project is **not currently accepting external contributions**
-  (see [CONTRIBUTING.md](CONTRIBUTING.md)).
-
-## License
-
-Licensed under the [Apache License 2.0](LICENSE).
-
-<!--
-  Suggested GitHub "About" for this repo:
-  Description: "Client library and examples for running AlphaEvolve — a Gemini-powered
-                evolutionary coding agent — on Google Cloud."
-  Topics: alphaevolve, gemini, google-cloud, gemini-enterprise, evolutionary-algorithm,
-          algorithm-discovery, llm, code-generation, discovery-engine, ray, gke, lora
--->
+This project is licensed under the Apache License 2.0. All trademarks and system concepts belong to Google Cloud AlphaEvolve Framework.

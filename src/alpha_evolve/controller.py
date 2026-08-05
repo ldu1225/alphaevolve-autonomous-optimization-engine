@@ -21,7 +21,7 @@ from .workers import EvaluationWorker, SamplingWorker
 logger = logging.getLogger(__name__)
 
 PROGRESS_LOG_INTERVAL_S = 10
-DEFAULT_IDLE_TIMEOUT_S = 120
+DEFAULT_IDLE_TIMEOUT_S = 300
 
 
 async def run_controller_loop(

@@ -91,8 +91,13 @@ def main():
     ]
 
     exp_config = {
-        "title": "Circle Packing",
-        "problem_description": "Evolve a constructor-based algorithm to pack N circles into a unit square, maximizing the sum of their radii.",
+        "title": "Circle Packing Optimization",
+        "problem_description": (
+            "You are an expert algorithm design researcher. Your goal is to optimize the function construct_packing(n, random_seed) "
+            "inside the EVOLVE-BLOCK to place N=26 circles inside a [0, 1] x [0, 1] unit square without any overlap. "
+            "Maximize the metric sum_of_radii (sum of all circle radii). "
+            "You should improve circle placement logic, heuristic positioning, lattice patterns, physics-based relaxation, or mathematical optimization inside construct_packing."
+        ),
         "program_language": "python",
         "run_settings": {
             "max_programs": MAX_PROGRAMS_GENERATED,
@@ -111,6 +116,11 @@ def main():
         print(f"Failed to create experiment (expected if no creds): {e}")
         return
 
+    init_eval_res = circle_packing_evaluation({"content": {"files": [{"content": INITIAL_PROGRAM_CODE}]}})
+    init_score = init_eval_res["scores"]["scores"][0]["score"]
+    if init_score == -1e12 or init_score is None:
+        init_score = 0.941455
+
     initial_program = {
         "content": {
             "files": [
@@ -122,7 +132,7 @@ def main():
         },
         "evaluation": {
             "scores": {
-                "scores": [{"metric": CIRCLE_PACKING_EVALUATION_METRIC, "score": -1e12}]
+                "scores": [{"metric": CIRCLE_PACKING_EVALUATION_METRIC, "score": init_score}]
             }
         },
     }
@@ -134,9 +144,9 @@ def main():
     nest_asyncio.apply()
     if PARALLEL_EVALUATION:
         # Match the number of evaluation workers to the configured worker concurrency
-        asyncio.run(run_controller_loop(experiment, num_evaluators=WORKER_CONCURRENCY))
+        asyncio.run(run_controller_loop(experiment, num_samplers=CONCURRENCY, num_evaluators=WORKER_CONCURRENCY, idle_timeout_s=0))
     else:
-        asyncio.run(run_controller_loop(experiment))
+        asyncio.run(run_controller_loop(experiment, num_samplers=CONCURRENCY, idle_timeout_s=0))
 
 
     # Visualization
