@@ -789,6 +789,10 @@ document.addEventListener('DOMContentLoaded', () => {
           if (slider) {
             slider.max = liveCandidatesData.length - 1;
           }
+
+          if (typeof drawCircles === 'function' && window.currentScenario !== 'verilog_fir') {
+            drawCircles(slider ? parseInt(slider.value) : 0);
+          }
         }
       }
     } catch (e) { console.log('Live data syncing...', e); }
@@ -809,27 +813,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 2000);
 
   const canvas = document.getElementById('circle-canvas');
-  const cctx = canvas ? canvas.getContext('2d') : null;
   const size = 440;
-
-  async function loadRealCircleGeometry() {
-    try {
-      const res = await fetch('real_circles.json?t=' + Date.now());
-      if (res.ok) {
-        realCircleGeometry = await res.json();
-        const slider = document.getElementById('generation-slider');
-        if (typeof drawCircles === 'function') {
-          drawCircles(slider ? parseInt(slider.value) : 0);
-        }
-      }
-    } catch (e) {
-      console.log('Real circle geometry loading...', e);
-    }
-  }
-  loadRealCircleGeometry();
 
   drawCircles = function(genIndex) {
     const cvs = document.getElementById('circle-canvas');
+    const cctx = cvs ? cvs.getContext('2d') : null;
     if (cvs) {
       if (cvs.width !== 440) cvs.width = 440;
       if (cvs.height !== 440) cvs.height = 440;
@@ -946,6 +934,22 @@ document.addEventListener('DOMContentLoaded', () => {
       cctx.stroke();
     });
   };
+
+  async function loadRealCircleGeometry() {
+    try {
+      const res = await fetch('real_circles.json?t=' + Date.now());
+      if (res.ok) {
+        realCircleGeometry = await res.json();
+        const slider = document.getElementById('generation-slider');
+        if (typeof drawCircles === 'function') {
+          drawCircles(slider ? parseInt(slider.value) : 0);
+        }
+      }
+    } catch (e) {
+      console.log('Real circle geometry loading...', e);
+    }
+  }
+  loadRealCircleGeometry();
 
   const genSlider = document.getElementById('generation-slider');
   if (genSlider) {
