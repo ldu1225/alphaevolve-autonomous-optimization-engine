@@ -10,19 +10,19 @@
 
 ---
 
-## 🖼️ Enterprise Dashboard UI Showcase
+## Dashboard Interface & Architecture Overview
 
-| 🌐 Main Portal Entrance | ⚙️ Environment Setup & Config |
+| Main Portal Entrance | Environment Setup & Config |
 | :---: | :---: |
 | ![Main Portal](assets/screenshots/portal_home.png) | ![Environment Setup](assets/screenshots/step2_environment.png) |
 
-| 🔄 Closed-Loop Architecture Diagram | 🎨 Real-Time Visualization & Candidate Code |
+| Closed-Loop Architecture Diagram | Real-Time Visualization & Candidate Code |
 | :---: | :---: |
 | ![Closed-Loop Diagram](assets/screenshots/step3_closed_loop_diagram.png) | ![Visualization Results](assets/screenshots/step5_visualization_results.png) |
 
 ---
 
-## 📌 Executive Overview
+## Technical Overview
 
 **AlphaEvolve Autonomous Engine**은 Google Cloud Discovery Engine 및 Gemini 3.5 Pro/Flash LLM을 결합하여, 인간 엔지니어가 수동으로 작성한 코드를 **무한 폐루프(Closed-Loop) 자율 피트니스 평가기(Sandbox Evaluator)**와 연동해 수학 알고리즘 및 반도체 RTL 회로를 자동 변이·최적화하는 엔터프라이즈 AI 프레임워크입니다.
 
@@ -170,10 +170,11 @@ python examples/circle_packing/src/run_evolution.py
 ```bash
 python server.py
 ```
-브라우저에서 `http://localhost:8080/`에 접속하여 실시간 진화 파형 및 세대별 보관소를 감상하세요.
+브라우저에서 `http://localhost:8080/`에 접속하여 실시간 진화 파형, 실측 점수 및 세대별 후보 코드를 확인합니다.
 
 ---
 
 ## 📜 License & Compliance
 
 This project is licensed under the Apache License 2.0. All trademarks and system concepts belong to Google Cloud AlphaEvolve Framework.
+
