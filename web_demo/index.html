@@ -426,18 +426,18 @@
 
       <div class="setup-steps-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 20px;">
         
-        <!-- Setup Card 1: Git Clone & Repo Download -->
+        <!-- Setup Card 1: Project & Agent Skills Setup -->
         <div class="setup-card-detailed" style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 20px;">
           <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
             <div style="background: #a855f7; color: #ffffff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">1</div>
-            <h3 style="color: #a855f7; margin: 0; font-size: 16px;">GitHub 저장소 다운로드 (git clone)</h3>
+            <h3 style="color: #a855f7; margin: 0; font-size: 16px;">프로젝트 & Agent Skills 준비</h3>
           </div>
           <ul style="color: #cbd5e1; font-size: 13px; line-height: 1.6; padding-left: 18px; margin: 0 0 12px 0;">
-            <li>공식 AlphaEvolve GitHub 리포지토리 로컬 다운로드</li>
-            <li>실험 예제 디렉토리(<code>examples/circle_packing</code>)로 이동</li>
+            <li>AlphaEvolve Verilog 예제 디렉토리 이동 및 가이드 참조</li>
+            <li>Agent Skills (<code>.agents/skills/</code>) 지침을 활용한 샌드박스 설정</li>
           </ul>
           <div style="background: #090d16; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 11px; color: #e9d5ff;">
-            git clone https://github.com/Google-Cloud-AI/alphaevolve-on-googlecloud.git
+            cd examples/verilog_fir_filter && make run
           </div>
         </div>
 
