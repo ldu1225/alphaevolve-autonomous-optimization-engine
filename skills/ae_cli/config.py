@@ -75,7 +75,7 @@ _ENV_KEY_MAP: dict[str, str] = {
 
 
 # Placeholder values that must never be sent to the API as-is.
-_SESSION_PLACEHOLDERS = frozenset({"[create new]", "-", ""})
+_SESSION_PLACEHOLDERS = frozenset({"[create new]", "-", "", "default_assistant", "default_session"})
 
 # A generation-model entry: {"name": str, "weight"?: float, plus any passthrough
 # keys forwarded verbatim to the API}. Deliberately a type alias and not a

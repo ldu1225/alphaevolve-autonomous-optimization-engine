@@ -174,6 +174,48 @@ python server.py
 
 ---
 
+### 5. 🛠️ Official `ae` CLI Usage Guide (`ae` 명령어 사용법)
+
+Google Official `ae` CLI 도구를 활용하여 실험 생성, 코드 전송, 로컬 평가 루프를 3단계 라이프사이클로 수행할 수 있습니다:
+
+#### ① CLI 환경 설정 & GCP 인증
+```bash
+# 가상환경 활성화
+source .venv/bin/activate
+
+# GCP ADC 인증 및 Quota 설정
+gcloud auth application-default login
+gcloud auth application-default set-quota-project <YOUR_PROJECT_ID>
+```
+
+#### ② 실험 라이프사이클 3단계 실행 (Circle Packing 예시)
+```bash
+cd examples/circle_packing
+
+# Step 1: 실험 등록 (Create) -> 닉네임(예: exp-merciful-avocet) 생성
+ae experiment create --max-programs 100 --problem-file instructions.md --title "Circle Packing Optimization" --models gemini-3.5-flash
+
+# Step 2: 초기 코드 및 베이스라인 점수 업로드 (Start)
+ae experiment start exp-merciful-avocet --program-dir exp_src --score 0.9415
+
+# Step 3: 로컬 평가 루프 및 대시보드 구동 (Run)
+ae experiment run exp-merciful-avocet --evaluator evaluator.py --dashboard circle_packing_dashboard.md
+```
+
+#### ③ 세대별 코드 및 변형점(Diff) 조회
+```bash
+# 생성된 세대별 후보 목록 조회
+ae program list exp-merciful-avocet
+
+# 특정 후보(세대) 전체 소스코드 확인
+ae program show prog-fanatic-stallion --experiment exp-merciful-avocet
+
+# 이전 부모 세대 대비 변형된 코드 차이점(diff) 확인
+ae program diff prog-fanatic-stallion --experiment exp-merciful-avocet
+```
+
+---
+
 ## 📜 License & Compliance
 
 This project is licensed under the Apache License 2.0. All trademarks and system concepts belong to Google Cloud AlphaEvolve Framework.

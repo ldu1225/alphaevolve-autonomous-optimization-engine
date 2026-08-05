@@ -776,20 +776,18 @@ def _resolve_experiment(
     client: client_module.AlphaEvolveClient | None = None,
 ) -> str:
   """Resolve an experiment identifier to full name."""
-  cfg = _state.resolve_config()
   if "/" in identifier:
     return identifier
 
   if not client:
     client = _state.get_client()
 
+  cfg = client._config
+
   # Check the persistent index first to avoid a network round-trip.
   index = nicknames.NicknameIndex.load()
   res = index.resolve(identifier)
   if res:
-    if not res.startswith(cfg.parent):
-      if match := re.search(r"/alphaEvolveExperiments/([^/]+)$", res):
-        return cfg.experiment_name(match.group(1))
     return res
 
   experiments = _list_experiments_aggregated(client)
@@ -798,9 +796,6 @@ def _resolve_experiment(
 
   res = index.resolve(identifier)
   if res:
-    if not res.startswith(cfg.parent):
-      if match := re.search(r"/alphaEvolveExperiments/([^/]+)$", res):
-        return cfg.experiment_name(match.group(1))
     return res
 
   return cfg.experiment_name(identifier)
@@ -839,13 +834,6 @@ def _resolve_program(
   index = nicknames.NicknameIndex.load()
   res = index.resolve(identifier)
   if res:
-    if not res.startswith(cfg.parent):
-      # Session mismatch. Rebuild with current session.
-      if match := re.search(
-          r"/alphaEvolveExperiments/([^/]+)/alphaEvolvePrograms/([^/]+)$",
-          res,
-      ):
-        return cfg.program_name(match.group(1), match.group(2))
     return res
 
   if not experiment:
