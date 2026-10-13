@@ -422,12 +422,13 @@ def _circles_overlap(centers, radii):
 
 def evaluate(eval_inputs: Mapping[str, Any]) -> dict[str, float]:
     """Construct a packing and evaluate its score."""
-    n = eval_inputs["n"]
-    if "random_seed" not in eval_inputs:
+    n = eval_inputs.get("n")
+    if not isinstance(n, int) or n < 1 or n > 1000:
+        return {"sum_of_radii": -np.inf}
+    random_seed = eval_inputs.get("random_seed", 42)
+    if not isinstance(random_seed, (int, np.integer)):
         random_seed = 42
-    else:
-        random_seed = eval_inputs["random_seed"]
-    centers, radii, _ = construct_packing(n, random_seed=random_seed)
+    centers, radii, _ = construct_packing(n, random_seed=int(random_seed))
     if (
         centers.shape != (n, 2)
         or not np.isfinite(centers).all()
