@@ -33,6 +33,11 @@ def construct_packing(n, random_seed: int):
     """Construct a specific arrangement of circles in a unit square.
 
     The goal is to maximize the sum of their radii using mathematical optimization.
+    """
+    if not isinstance(n, int) or n < 1 or n > 1000:
+        raise ValueError(f"Invalid circle count n={n}; expected 1 <= n <= 1000.")
+
+    The goal is to maximize the sum of their radii using mathematical optimization.
 
     Args:
         n: Number of circles.
@@ -96,11 +101,12 @@ def construct_packing(n, random_seed: int):
     for cx, cy in [(0.15, 0.15), (0.15, 0.85), (0.85, 0.15), (0.85, 0.85)]:
         c1.append([cx, cy])
         r1.append(0.09)
-    for _ in range(n - 5):
+    for _ in range(max(0, n - len(c1))):
         c1.append(rng.uniform(0.1, 0.9, 2))
         r1.append(rng.uniform(0.01, 0.04))
-    x0_1[:2*n] = np.array(c1).flatten()
-    x0_1[2*n:] = r1
+    c1, r1 = c1[:n], r1[:n]
+    x0_1[:2*n] = np.array(c1).flatten()[:2*n]
+    x0_1[2*n:] = r1[:n]
     multiverse_x0.append(x0_1)
 
     # Universe 2: Twin Suns (Two large binary stars with planetary disks)
@@ -109,11 +115,12 @@ def construct_packing(n, random_seed: int):
     for cx, cy in [(0.5, 0.15), (0.5, 0.85)]:
         c2.append([cx, cy])
         r2.append(0.14)
-    for _ in range(n - 4):
+    for _ in range(max(0, n - len(c2))):
         c2.append(rng.uniform(0.1, 0.9, 2))
         r2.append(rng.uniform(0.01, 0.04))
-    x0_2[:2*n] = np.array(c2).flatten()
-    x0_2[2*n:] = r2
+    c2, r2 = c2[:n], r2[:n]
+    x0_2[:2*n] = np.array(c2).flatten()[:2*n]
+    x0_2[2*n:] = r2[:n]
     multiverse_x0.append(x0_2)
     
     # Universe 3: The Sunflower Spiral (Phyllotaxis distribution)
