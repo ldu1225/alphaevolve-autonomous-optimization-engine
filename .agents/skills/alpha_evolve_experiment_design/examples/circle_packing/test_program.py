@@ -5,7 +5,9 @@ from initial_program import evaluate
 import numpy as np
 
 
-EVAL_INPUTS = {"n": 26}
+from types import MappingProxyType
+
+EVAL_INPUTS = MappingProxyType({"n": 26})
 
 
 class TestSolve:
