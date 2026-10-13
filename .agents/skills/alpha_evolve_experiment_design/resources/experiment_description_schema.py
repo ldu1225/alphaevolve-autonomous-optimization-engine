@@ -115,6 +115,9 @@ class ExperimentDescription(BaseModel):
   name: Annotated[
       str,
       Field(
+          pattern=r"^[a-z0-9_]+$",
+          min_length=1,
+          max_length=100,
           description=(
               "Short snake_case slug used as the project directory name "
               "and pyproject.toml project name. Example: 'circle_packing'."
@@ -258,6 +261,8 @@ class ExperimentDescription(BaseModel):
       int,
       Field(
           default=30,
+          gt=0,
+          le=3600,
           description=(
               "Maximum seconds before evaluation is killed via "
               "signal.alarm(). Programs exceeding this return -10**12."
