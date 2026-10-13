@@ -28,7 +28,9 @@ import numpy as np
 
 
 def construct_packing(n, random_seed: int):
-    """Construct a specific arrangement of 26 circles in a unit square.
+    """Construct a specific arrangement of 26 circles in a unit square."""
+    if not isinstance(n, int) or n <= 0 or n > 1000:
+        raise ValueError("n must be a positive integer not exceeding 1000")
 
     The goal is to maximize the sum of their radii.
 
@@ -286,7 +288,7 @@ def compute_max_radii(centers, random_seed: int):
             res = linprog(c, A_ub=A, b_ub=b, bounds=bounds, method=method)
             if res.success:
                 return res.x
-        except Exception:
+        except (ValueError, np.linalg.LinAlgError):
             continue
 
     # Fallback to analytical scaling heuristic if LP solver is not available/fails
