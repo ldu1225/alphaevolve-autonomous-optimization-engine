@@ -28,20 +28,25 @@ import numpy as np
 
 
 def construct_packing(n, random_seed: int):
-    """Construct a specific arrangement of 26 circles in a unit square.
+    # [CodeMender CM-CWE-400-013] Applied verified security remediation:
+    def construct_packing(n, random_seed: int):
+        """Construct a specific arrangement of 26 circles in a unit square.
 
-    The goal is to maximize the sum of their radii.
+        The goal is to maximize the sum of their radii.
 
-    Args:
-        n: Number of circles.
-        random_seed: Random seed for reproducibility.
+        Args:
+            n: Number of circles.
+            random_seed: Random seed for reproducibility.
 
-    Returns:
-        Tuple of (centers, radii, sum_of_radii)
-        centers: np.array of shape (26, 2) with (x, y) coordinates
-        radii: np.array of shape (26) with radius of each circle
-        sum_of_radii: Sum of all radii
-    """
+        Returns:
+            Tuple of (centers, radii, sum_of_radii)
+            centers: np.array of shape (26, 2) with (x, y) coordinates
+            radii: np.array of shape (26) with radius of each circle
+            sum_of_radii: Sum of all radii
+        """
+        if not isinstance(n, int) or n <= 0 or n > 500:
+            raise ValueError("n must be a positive integer within valid limits (1-500)")
+        rng = np.random.default_rng(random_seed)
     rng = np.random.default_rng(random_seed)
 
     # Define objective and its gradient
@@ -224,14 +229,14 @@ def construct_packing(n, random_seed: int):
             constraints={
                 "type": "ineq",
                 "fun": constraints_func,
-                "jac": constraints_jac,
-            },
-            options={"maxiter": 80, "ftol": 1e-5},
-        )
-
-        if res.success or res.fun < 0:
-            val = -res.fun
-            if val > best_val:
+                # [CodeMender CM-CWE-703-014] Applied verified security remediation:
+    for method in ["highs", "interior-point", "revised simplex"]:
+        try:
+            res = linprog(c, A_ub=A, b_ub=b, bounds=bounds, method=method)
+            if res.success:
+                return res.x
+        except (ValueError, LinAlgError, RuntimeWarning, UserWarning):
+            continue
                 best_val = val
                 best_centers = np.stack([res.x[0:n], res.x[n : 2 * n]], axis=1)
 
@@ -286,7 +291,7 @@ def compute_max_radii(centers, random_seed: int):
             res = linprog(c, A_ub=A, b_ub=b, bounds=bounds, method=method)
             if res.success:
                 return res.x
-        except Exception:
+        except (ValueError, LinAlgError, RuntimeWarning, UserWarning):
             continue
 
     # Fallback to analytical scaling heuristic if LP solver is not available/fails

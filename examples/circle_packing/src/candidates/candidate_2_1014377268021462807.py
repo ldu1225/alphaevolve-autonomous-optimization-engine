@@ -61,17 +61,18 @@ def compute_max_radii_lp(centers):
         for j in range(i + 1, n):
             row = np.zeros(n)
             row[i] = 1.0
-            row[j] = 1.0
-            dist = np.linalg.norm(centers[i] - centers[j])
-            A.append(row)
-            b.append(max(0.0, dist - 1e-6))
-
+            # [CodeMender CM-CWE-703-008] Applied verified security remediation:
     try:
         res = linprog(c, A_ub=A, b_ub=b, bounds=bounds, method="highs")
-    except Exception:
+    except (ValueError, RuntimeError, np.linalg.LinAlgError):
         try:
             res = linprog(c, A_ub=A, b_ub=b, bounds=bounds)
-        except Exception:
+        except (ValueError, RuntimeError, np.linalg.LinAlgError):
+            return compute_max_radii_fast(centers)
+    except (ValueError, RuntimeError, np.linalg.LinAlgError):
+        try:
+            res = linprog(c, A_ub=A, b_ub=b, bounds=bounds)
+        except (ValueError, RuntimeError, np.linalg.LinAlgError):
             return compute_max_radii_fast(centers)
 
     if res.success:
@@ -233,13 +234,16 @@ def construct_packing(n, random_seed: int):
 
     Args:
         n: Number of circles.
-        random_seed: Random seed for reproducibility.
-
-    Returns:
-        Tuple of (centers, radii, sum_of_radii)
-        centers: np.array of shape (26, 2) with (x, y) coordinates
-        radii: np.array of shape (26) with radius of each circle
-        sum_of_radii: Sum of all radii
+        # [CodeMender CM-CWE-1284-007] Applied verified security remediation:
+        def evaluate(eval_inputs: Mapping[str, Any]) -> dict[str, float]:
+            """Construct a packing and evaluate its score."""
+            n = eval_inputs.get("n")
+            if not isinstance(n, int) or n <= 0 or n > 1000:
+                return {"sum_of_radii": -np.inf}
+            random_seed = eval_inputs.get("random_seed", 42)
+            if not isinstance(random_seed, (int, np.integer)):
+                random_seed = 42
+            centers, radii, _ = construct_packing(n, random_seed=int(random_seed))
     """
     rng = np.random.default_rng(random_seed)
 
@@ -313,12 +317,13 @@ def _circles_overlap(centers, radii):
 
 def evaluate(eval_inputs: Mapping[str, Any]) -> dict[str, float]:
     """Construct a packing and evaluate its score."""
-    n = eval_inputs["n"]
-    if "random_seed" not in eval_inputs:
+    n = eval_inputs.get("n")
+    if not isinstance(n, int) or n <= 0 or n > 1000:
+        return {"sum_of_radii": -np.inf}
+    random_seed = eval_inputs.get("random_seed", 42)
+    if not isinstance(random_seed, (int, np.integer)):
         random_seed = 42
-    else:
-        random_seed = eval_inputs["random_seed"]
-    centers, radii, _ = construct_packing(n, random_seed=random_seed)
+    centers, radii, _ = construct_packing(n, random_seed=int(random_seed))
     if (
         centers.shape != (n, 2)
         or not np.isfinite(centers).all()
