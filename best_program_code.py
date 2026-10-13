@@ -385,6 +385,8 @@ def construct_packing(n, random_seed: int):
         radii: np.array of shape (26) with radius of each circle
         sum_of_radii: Sum of all radii
     """
+    if not isinstance(n, int) or n <= 0 or n > 200:
+        raise ValueError(f"Invalid number of circles n={n}; expected an integer between 1 and 200")
     centers, radii, sum_radii = optimize_positions(n, random_seed)
     return centers, radii, sum_radii
 

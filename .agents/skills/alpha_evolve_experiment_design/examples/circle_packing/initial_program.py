@@ -32,6 +32,9 @@ def construct_packing(
       - radii: np.ndarray of shape (n,) with radius of each circle
       - sum_of_radii: float, sum of all radii
   """
+  if n <= 0:
+    return np.zeros((0, 2)), np.zeros((0,)), 0.0
+
   rng = np.random.default_rng(random_seed)
   centers = np.zeros((n, 2))
 
@@ -118,6 +121,8 @@ def evaluate(eval_inputs: Mapping[str, Any]) -> dict[str, float]:
       or -inf if the packing is invalid.
   """
   n = eval_inputs["n"]
+  if not isinstance(n, int) or n < 1 or n > 10000:
+    return {"sum_of_radii": -np.inf}
   random_seed = eval_inputs.get("random_seed", 42)
 
   centers, radii, _ = construct_packing(n, random_seed=random_seed)

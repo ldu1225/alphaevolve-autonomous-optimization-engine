@@ -93,6 +93,7 @@ def evaluate_program(code: str, timeout_seconds: int = 30) -> dict[str, Any]:
       signal.alarm(timeout_seconds)
 
     exec_namespace: dict[str, Any] = {
+        "__builtins__": __builtins__,
         "np": np,
         "Any": Any,
         "Mapping": Mapping,
@@ -190,12 +191,12 @@ def main():
   )
   args = parser.parse_args()
 
-  with open(args.input_program_file[0]) as f:
+  with open(args.input_program_file[0], encoding="utf-8") as f:
     code = f.read()
 
   result = evaluate_program(code)
 
-  with open(args.output_file, "w") as f:
+  with open(args.output_file, "w", encoding="utf-8") as f:
     json.dump(result, f)
 
 
