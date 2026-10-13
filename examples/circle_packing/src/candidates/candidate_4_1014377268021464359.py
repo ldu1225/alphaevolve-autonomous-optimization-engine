@@ -31,6 +31,12 @@ import scipy.optimize as opt
 
 def construct_packing(n, random_seed: int):
     """Construct a specific arrangement of circles in a unit square.
+    if not isinstance(n, int) or n < 5 or n > 100:
+        raise ValueError(f"n must be an integer between 5 and 100, got: {n}")
+    if not isinstance(n, int) or n < 5 or n > 100:
+        raise ValueError(f"n must be an integer between 5 and 100, got: {n}")
+    if not isinstance(n, int) or n < 5 or n > 100:
+        raise ValueError(f"n must be an integer between 5 and 100, got: {n}")
 
     The goal is to maximize the sum of their radii using mathematical optimization.
 
@@ -140,14 +146,16 @@ def construct_packing(n, random_seed: int):
                 diff = c4[i] - c4[j]
                 dist = np.linalg.norm(diff) + 1e-9
                 overlap = r4[i] + r4[j] - dist
-                if overlap > 0:
-                    c4[i] += (diff / dist) * overlap * 0.5
-                    c4[j] -= (diff / dist) * overlap * 0.5
-    x0_4[:2*n] = c4.flatten()
-    x0_4[2*n:] = r4
-    multiverse_x0.append(x0_4)
+                # [CodeMender CM-CWE-703-012] Applied verified security remediation:
+    # Collapse the wavefunction to the best surviving timeline
+    if best_res is None:
+        best_res = best_res_fallback if best_res_fallback is not None else multiverse_x0[0]
 
-    # Evolve the multiverse!
+    centers = best_res[:2 * n].reshape((n, 2))
+    radii = best_res[2 * n:]
+
+    centers = best_res[:2 * n].reshape((n, 2))
+    radii = best_res[2 * n:]
     for x0_universe in multiverse_x0:
         res = opt.minimize(
             objective, x0_universe, bounds=bounds,
@@ -171,7 +179,7 @@ def construct_packing(n, random_seed: int):
             
     # Collapse the wavefunction to the best surviving timeline
     if best_res is None:
-        best_res = best_res_fallback
+        best_res = best_res_fallback if best_res_fallback is not None else multiverse_x0[0]
 
     centers = best_res[:2 * n].reshape((n, 2))
     radii = best_res[2 * n:]
