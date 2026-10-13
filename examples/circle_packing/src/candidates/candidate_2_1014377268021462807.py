@@ -68,10 +68,10 @@ def compute_max_radii_lp(centers):
 
     try:
         res = linprog(c, A_ub=A, b_ub=b, bounds=bounds, method="highs")
-    except Exception:
+    except (ValueError, RuntimeError):
         try:
             res = linprog(c, A_ub=A, b_ub=b, bounds=bounds)
-        except Exception:
+        except (ValueError, RuntimeError):
             return compute_max_radii_fast(centers)
 
     if res.success:
@@ -228,6 +228,8 @@ def force_directed_relaxation(centers, steps=500, lr=0.005, decay=0.9):
 
 def construct_packing(n, random_seed: int):
     """Construct a specific arrangement of 26 circles in a unit square.
+    if not isinstance(n, int) or n < 1 or n > 200:
+        raise ValueError(f"Invalid circle count n: {n}")
 
     The goal is to maximize the sum of their radii.
 

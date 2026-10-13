@@ -41,6 +41,8 @@ def construct_packing(n, random_seed: int):
     Returns:
         Tuple of (centers, radii, sum_of_radii)
     """
+    if not isinstance(n, int) or n <= 0 or n > 1000:
+        raise ValueError("n must be a positive integer <= 1000")
     rng = np.random.default_rng(random_seed)
 
     def objective(vars):
