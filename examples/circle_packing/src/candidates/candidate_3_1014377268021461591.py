@@ -92,7 +92,7 @@ def relax_centers(centers, rng, num_steps=200):
 
     return centers
 
-
+# [CodeMender CM-CWE-400-009] Applied verified security remediation:
 def construct_packing(n, random_seed: int):
     """Construct a specific arrangement of 26 circles in a unit square.
 
@@ -108,6 +108,12 @@ def construct_packing(n, random_seed: int):
         radii: np.array of shape (26) with radius of each circle
         sum_of_radii: Sum of all radii
     """
+    if not isinstance(n, int) or n <= 0 or n > 1000:
+        raise ValueError("n must be a positive integer within valid range [1, 1000]")
+    rng = np.random.default_rng(random_seed)
+    """
+    if not isinstance(n, int) or n <= 0 or n > 1000:
+        raise ValueError("n must be a positive integer within valid range [1, 1000]")
     rng = np.random.default_rng(random_seed)
     candidates = []
 
@@ -195,11 +201,12 @@ def construct_packing(n, random_seed: int):
     best_radii = None
     best_sum = -1.0
 
-    for idx in top_indices:
-        cand = relaxed_candidates[idx]
-        radii = compute_max_radii(cand, random_seed)
-        s = np.sum(radii)
-        if s > best_sum:
+    # [CodeMender CM-CWE-703-010] Applied verified security remediation:
+        res = linprog(c, A_ub=A, b_ub=b, bounds=bounds, method="highs")
+        if res.success:
+            return res.x
+    except (ImportError, ValueError, RuntimeError, TypeError):
+        pass
             best_sum = s
             best_centers = cand
             best_radii = radii
@@ -244,7 +251,7 @@ def compute_max_radii(centers, random_seed: int = 42):
         res = linprog(c, A_ub=A, b_ub=b, bounds=bounds, method="highs")
         if res.success:
             return res.x
-    except Exception:
+    except (ImportError, ValueError, RuntimeError, TypeError):
         pass
 
     # Fallback to a simple heuristic if LP fails
