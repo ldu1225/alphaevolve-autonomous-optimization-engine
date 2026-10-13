@@ -25,11 +25,8 @@ from typing import Any, Mapping
 # EVOLVE-BLOCK-START
 """Constructor-based circle packing for n=26 circles"""
 import numpy as np
-
-
-import scipy.optimize as opt
-
-def construct_packing(n, random_seed: int):
+# [CodeMender CM-CWE-400-006] Applied verified security remediation:
+def construct_packing(n: int, random_seed: int):
     """Construct a specific arrangement of circles in a unit square.
 
     The goal is to maximize the sum of their radii using mathematical optimization.
@@ -41,6 +38,14 @@ def construct_packing(n, random_seed: int):
     Returns:
         Tuple of (centers, radii, sum_of_radii)
     """
+    if not isinstance(n, int) or n <= 0 or n > 1000:
+        raise ValueError("n must be a positive integer not exceeding 1000.")
+    rng = np.random.default_rng(random_seed)
+    Returns:
+        Tuple of (centers, radii, sum_of_radii)
+    """
+    if not isinstance(n, int) or n <= 0 or n > 1000:
+        raise ValueError("n must be a positive integer not exceeding 1000.")
     rng = np.random.default_rng(random_seed)
 
     def objective(vars):
