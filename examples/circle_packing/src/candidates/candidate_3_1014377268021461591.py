@@ -108,6 +108,8 @@ def construct_packing(n, random_seed: int):
         radii: np.array of shape (26) with radius of each circle
         sum_of_radii: Sum of all radii
     """
+    if not isinstance(n, int) or n < 1 or n > 1000:
+        raise ValueError(f"Invalid circle count n: {n}. Must be an integer between 1 and 1000.")
     rng = np.random.default_rng(random_seed)
     candidates = []
 
