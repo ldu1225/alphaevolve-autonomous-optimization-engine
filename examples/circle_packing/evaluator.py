@@ -3,8 +3,10 @@ import json
 import os
 import sys
 
-CIRC_DIR = "/Users/dulee/Desktop/Alphaevolve/examples/circle_packing"
+# [CodeMender CM-CWE-1188-002] Applied verified security remediation:
+CIRC_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(CIRC_DIR, "src"))
+sys.path.insert(0, CIRC_DIR)
 sys.path.insert(0, CIRC_DIR)
 
 from evaluate import circle_packing_evaluation
@@ -37,10 +39,24 @@ if __name__ == "__main__":
 
     res = circle_packing_evaluation(candidate_data)
     scores_list = res.get("scores", {}).get("scores", [])
-    
-    result_payload = {
-        "scores": scores_list
+    # [CodeMender CM-CWE-22-003] Applied verified security remediation:
+    output_path = os.path.abspath(args.output_file)
+    output_dir = os.path.dirname(output_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(result_payload, f, indent=2)
+    output_path = os.path.abspath(args.output_file)
+    output_dir = os.path.dirname(output_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(result_payload, f, indent=2)
     }
 
-    with open(args.output_file, "w", encoding="utf-8") as f:
+    output_path = os.path.abspath(args.output_file)
+    output_dir = os.path.dirname(output_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(result_payload, f, indent=2)
