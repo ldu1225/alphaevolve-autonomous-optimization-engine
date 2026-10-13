@@ -148,8 +148,7 @@ class TestCLIInterface:
 
   def test_cli_writes_score_on_success(self):
     """main() writes score + insights for valid programs."""
-    tmpdir = tempfile.mkdtemp()
-    try:
+    with tempfile.TemporaryDirectory() as tmpdir:
       prog_dst = os.path.join(tmpdir, "initial_program.py")
       shutil.copy("initial_program.py", prog_dst)
       shutil.copy("evaluator.py", os.path.join(tmpdir, "evaluator.py"))
@@ -177,8 +176,6 @@ class TestCLIInterface:
       assert isinstance(data["score"], float)
       assert data["score"] > 0
       assert "insights" in data
-    finally:
-      shutil.rmtree(tmpdir)
 
   def test_cli_writes_error_insights_on_failure(self):
     """main() writes error insights for broken programs."""
